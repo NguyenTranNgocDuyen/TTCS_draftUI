@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System</div>
+        <div>Xin chào, User</div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="#">Dashboard</a>
+            <a href="#">Chấm công</a>
+            <a href="#">Xin nghỉ phép</a>
+            <a href="#">Lịch sử</a>
+        </div>
+
+        <div class="content">
+            <h2>Dashboard</h2>
+
+            <div class="card">
+                ✔ Bạn đã xác nhận bảng công thành công!
+            </div>
+
+            <div class="card">
+                Thống kê nhanh (demo):
+                <ul>
+                    <li>Số ngày làm: 20</li>
+                    <li>Tổng giờ: 160h</li>
+                    <li>Nghỉ phép còn lại: 5 ngày</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

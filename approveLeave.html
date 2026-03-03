@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Duyệt đơn nghỉ phép</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+
+        /* STATUS */
+        .status {
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* BUTTON */
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .approve {
+            background: #22c55e;
+        }
+
+        .reject {
+            background: #ef4444;
+        }
+
+        /* POPUP */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System (Admin)</div>
+        <div>Xin chào, Admin</div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a>Dashboard</a>
+            <a>Duyệt Timesheet</a>
+            <a>Duyệt nghỉ phép</a>
+            <a>Quản lý nhân viên</a>
+        </div>
+
+        <div class="content">
+            <h2>Duyệt đơn nghỉ phép</h2>
+
+            <div class="card">
+                <table>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Loại nghỉ</th>
+                        <th>Từ ngày</th>
+                        <th>Đến ngày</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+
+                    <tr id="row1">
+                        <td>Nguyễn Văn A</td>
+                        <td>Nghỉ phép năm</td>
+                        <td>05/03/2026</td>
+                        <td>06/03/2026</td>
+                        <td>Du lịch</td>
+
+                        <td id="statusCell">
+                            <span class="status pending">Chờ duyệt</span>
+                        </td>
+
+                        <td id="actionCell">
+                            <button class="btn approve" onclick="approve()">Duyệt</button>
+                            <button class="btn reject" onclick="reject()">Từ chối</button>
+                        </td>
+                    </tr>
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP -->
+    <div id="popup" class="popup hidden">
+        <div class="popup-box">
+            <h3 id="popupTitle">✔ Thành công</h3>
+            <p id="popupText"></p>
+            <button onclick="closePopup()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        function approve() {
+            document.getElementById("popupText").innerText = "Đã duyệt đơn!";
+            document.getElementById("popup").classList.remove("hidden");
+
+            // Update UI
+            document.getElementById("statusCell").innerHTML =
+                '<span class="status approved">Đã duyệt</span>';
+
+            document.getElementById("actionCell").innerHTML = '';
+        }
+
+        function reject() {
+            document.getElementById("popupText").innerText = "Đã từ chối đơn!";
+            document.getElementById("popup").classList.remove("hidden");
+
+            // Update UI
+            document.getElementById("statusCell").innerHTML =
+                '<span class="status rejected">Từ chối</span>';
+
+            document.getElementById("actionCell").innerHTML = '';
+        }
+
+        function closePopup() {
+            document.getElementById("popup").classList.add("hidden");
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Xin nghỉ phép</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        /* POPUP */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System</div>
+        <div>Xin chào, User</div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="#">Dashboard</a>
+            <a href="#">Chấm công</a>
+            <a href="#">Xin nghỉ phép</a>
+            <a href="#">Lịch sử</a>
+        </div>
+
+        <div class="content">
+            <h2>Gửi đơn xin nghỉ phép</h2>
+
+            <div class="card">
+                <label>Loại nghỉ</label>
+                <select>
+                    <option>Nghỉ phép năm</option>
+                    <option>Nghỉ bệnh</option>
+                    <option>Nghỉ không lương</option>
+                </select>
+
+                <label>Từ ngày</label>
+                <input type="date">
+
+                <label>Đến ngày</label>
+                <input type="date">
+
+                <label>Lý do</label>
+                <textarea rows="3"></textarea>
+
+                <button onclick="submitLeave()">Gửi đơn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP -->
+    <div id="popup" class="popup hidden">
+        <div class="popup-box">
+            <h3>✔ Thành công</h3>
+            <p>Đã gửi đơn nghỉ phép!</p>
+            <button onclick="goToHistory()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        function submitLeave() {
+            document.getElementById("popup").classList.remove("hidden");
+        }
+
+        function goToHistory() {
+            window.location.href = "leave-history.html";
+        }
+    </script>
+
+</body>
+
+</html>

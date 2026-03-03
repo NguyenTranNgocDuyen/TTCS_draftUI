@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý nhân viên</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .create {
+            background: #2563eb;
+            margin-bottom: 15px;
+        }
+
+        .deactivate {
+            background: #f59e0b;
+        }
+
+        .delete {
+            background: #ef4444;
+        }
+
+        .disabled-status {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+
+        /* POPUP */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .popup-box label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        .popup-box input,
+        .popup-box select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System (Admin)</div>
+        <div>Xin chào, Admin</div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="#">Dashboard</a>
+            <a href="#">Duyệt Timesheet</a>
+            <a href="#">Duyệt nghỉ phép</a>
+            <a href="#">Xuất báo cáo</a>
+            <a href="#">Quản lý nhân viên</a>
+        </div>
+
+        <div class="content">
+            <h2>Quản lý nhân viên</h2>
+
+            <button class="btn create" onclick="createUser()">+ Tạo tài khoản</button>
+
+            <div class="card">
+                <table>
+                    <tr>
+                        <th>Tên</th>
+                        <th>Email</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+
+                    <tr id="userRow">
+                        <td>Nguyễn Văn A</td>
+                        <td>a@gmail.com</td>
+                        <td id="status">Hoạt động</td>
+                        <td>
+                            <button class="btn deactivate" onclick="deactivate()">Vô hiệu</button>
+                            <button class="btn delete" onclick="removeUser()">Xóa</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- THÊM DƯỚI TABLE -->
+                <div id="createPopup" class="popup hidden">
+                    <div class="popup-box" style="width: 400px; text-align:left;">
+                        <h3>Tạo tài khoản</h3>
+
+                        <label>Tên</label>
+                        <input id="name" type="text">
+
+                        <label>Email</label>
+                        <input id="email" type="email">
+
+                        <label>Mật khẩu</label>
+                        <input id="password" type="password">
+
+                        <label>Vai trò</label>
+                        <select id="role">
+                            <option>Nhân viên</option>
+                            <option>Admin</option>
+                        </select>
+
+                        <label>Trạng thái</label>
+                        <select id="statusSelect">
+                            <option>Hoạt động</option>
+                            <option>Đã vô hiệu</option>
+                        </select>
+
+                        <br><br>
+                        <button onclick="saveUser()" style="background:#22c55e;">Tạo</button>
+                        <button onclick="closeCreate()" style="background:#ccc; color:black;">Hủy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP -->
+    <div id="popup" class="popup hidden">
+        <div class="popup-box">
+            <h3>✔ Thành công</h3>
+            <p id="message"></p>
+            <button onclick="closePopup()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let action = ""; // lưu hành động đang thực hiện
+
+        function showPopup(text, type) {
+            action = type;
+            document.getElementById("message").innerText = text;
+            document.getElementById("popup").classList.remove("hidden");
+        }
+
+        function closePopup() {
+            document.getElementById("popup").classList.add("hidden");
+
+            // 👉 Xử lý sau khi bấm OK
+            if (action === "deactivate") {
+                document.getElementById("status").innerHTML =
+                    '<span class="disabled-status">Đã vô hiệu</span>';
+            }
+
+            if (action === "delete") {
+                document.getElementById("userRow").remove();
+            }
+        }
+
+        function createUser() {
+            showPopup("Đã tạo tài khoản!", "create");
+        }
+
+        function deactivate() {
+            showPopup("Đã vô hiệu hóa tài khoản!", "deactivate");
+        }
+
+        function removeUser() {
+            showPopup("Đã xóa tài khoản!", "delete");
+        }
+
+        function createUser() {
+            document.getElementById("createPopup").classList.remove("hidden");
+        }
+
+        function closeCreate() {
+            document.getElementById("createPopup").classList.add("hidden");
+        }
+
+        function saveUser() {
+            let name = document.getElementById("name").value;
+            let email = document.getElementById("email").value;
+            let status = document.getElementById("statusSelect").value;
+
+            if (name === "" || email === "") {
+                alert("Vui lòng nhập đầy đủ!");
+                return;
+            }
+
+            let table = document.querySelector("table");
+
+            let newRow = document.createElement("tr");
+
+            newRow.innerHTML = `
+        <td>${name}</td>
+        <td>${email}</td>
+        <td class="status">${status}</td>
+        <td>
+            <button class="btn deactivate" onclick="deactivateRow(this)">Vô hiệu</button>
+            <button class="btn delete" onclick="deleteRow(this)">Xóa</button>
+        </td>
+    `;
+
+            table.appendChild(newRow);
+
+            closeCreate();
+            showPopup("Đã tạo tài khoản!");
+        }
+    </script>
+
+</body>
+
+</html>

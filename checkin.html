@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chấm công</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2f80ed, #56ccf2);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: #f2f2f2;
+            padding: 30px;
+            border-radius: 20px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .time {
+            font-size: 40px;
+            color: #4a6cf7;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .status {
+            display: inline-block;
+            background: #ffd6d6;
+            color: red;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            background: #e0e0e0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 30px;
+            background: #28a745;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>Chấm Công Hôm Nay</h2>
+
+        <div class="time" id="clock">00:00:00</div>
+
+        <div class="status">● Chưa Check In</div>
+
+        <div class="info">
+            <p><b>Giờ Check In:</b> --:--</p>
+            <p><b>Thời gian làm việc:</b> 00:00:00</p>
+        </div>
+
+        <button class="btn" onclick="checkIn()">Check In</button>
+    </div>
+
+    <script>
+        // realtime clock
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            let s = now.getSeconds();
+
+            let ampm = h >= 12 ? "PM" : "AM";
+            h = h % 12 || 12;
+
+            document.getElementById("clock").innerHTML =
+                `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${ampm}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // chuyển sang Scene 4 (state đã check-in)
+        function checkIn() {
+            alert("Chuyển sang trạng thái đã Check In (Scene 4)");
+        }
+    </script>
+
+</body>
+
+</html>

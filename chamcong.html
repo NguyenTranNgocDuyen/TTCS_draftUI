@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chấm công</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #3a7bd5, #00d2ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Card */
+        .card {
+            background: #fff;
+            width: 400px;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        /* Time */
+        .time {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4e73df;
+        }
+
+        /* Status */
+        .status {
+            margin: 15px 0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .not-checkin {
+            background: #ffd6d6;
+            color: red;
+        }
+
+        .checked {
+            background: #d4edda;
+            color: green;
+        }
+
+        /* Info box */
+        .info {
+            background: #f1f3f6;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .checkin {
+            background: #28a745;
+        }
+
+        .checkout {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>Chấm Công Hôm Nay</h2>
+
+        <div class="time" id="currentTime">00:00:00</div>
+
+        <div id="status" class="status not-checkin">
+            ● Chưa Check In
+        </div>
+
+        <div class="info">
+            <p><b>Giờ Check In:</b> <span id="checkInTime">--:--:--</span></p>
+            <p><b>Thời gian làm việc:</b> <span id="workingTime">00:00:00</span></p>
+        </div>
+
+        <button id="btn" class="btn checkin">Check In</button>
+    </div>
+
+    <script>
+        let checkedIn = false;
+        let checkInTime = null;
+        let timerInterval = null;
+
+        /* Cập nhật giờ realtime */
+        function updateClock() {
+            const now = new Date();
+            document.getElementById("currentTime").innerText =
+                now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+
+        /* Format time */
+        function formatTime(ms) {
+            let totalSec = Math.floor(ms / 1000);
+            let h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+            let m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+            let s = String(totalSec % 60).padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        /* Button click */
+        document.getElementById("btn").onclick = function () {
+            const status = document.getElementById("status");
+            const btn = document.getElementById("btn");
+
+            if (!checkedIn) {
+                // CHECK IN
+                checkInTime = new Date();
+                document.getElementById("checkInTime").innerText =
+                    checkInTime.toLocaleTimeString();
+
+                checkedIn = true;
+
+                status.innerText = "✔ Đã Check In";
+                status.className = "status checked";
+
+                btn.innerText = "Check Out";
+                btn.className = "btn checkout";
+
+                // Start timer
+                timerInterval = setInterval(() => {
+                    let now = new Date();
+                    let diff = now - checkInTime;
+                    document.getElementById("workingTime").innerText =
+                        formatTime(diff);
+                }, 1000);
+
+            } else {
+                // CHECK OUT
+                clearInterval(timerInterval);
+
+                alert("Bạn đã check-out!");
+
+                checkedIn = false;
+
+                status.innerText = "● Chưa Check In";
+                status.className = "status not-checkin";
+
+                btn.innerText = "Check In";
+                btn.className = "btn checkin";
+
+                document.getElementById("workingTime").innerText = "00:00:00";
+            }
+        };
+    </script>
+
+</body>
+
+</html>

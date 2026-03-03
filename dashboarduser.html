@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f5f6fa;
+        }
+
+        /* HEADER */
+        .header {
+            background: #1e293b;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .logout {
+            background: #ef4444;
+            border: none;
+            padding: 8px 12px;
+            color: white;
+            border-radius: 5px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 220px;
+            height: 100vh;
+            background: #0f172a;
+            color: white;
+            position: fixed;
+        }
+
+        .sidebar h2 {
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        /* CONTENT */
+        .content {
+            margin-left: 220px;
+            padding: 20px;
+        }
+
+        /* CARD */
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 400px;
+            margin: auto;
+            text-align: center;
+        }
+
+        .time {
+            font-size: 40px;
+            color: #3b82f6;
+            margin: 10px 0;
+        }
+
+        .status {
+            background: #fee2e2;
+            color: red;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .box {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            background: #22c55e;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System</div>
+        <div>Xin chào, User <button class="logout">Logout</button></div>
+    </div>
+
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <a href="#">Dashboard</a>
+        <a href="#">Chấm công</a>
+        <a href="#">Xin nghỉ phép</a>
+        <a href="#">Lịch sử</a>
+    </div>
+
+    <div class="content">
+
+        <h2>Chấm Công Hôm Nay</h2>
+
+        <div class="card">
+            <h3>Chấm Công</h3>
+            <div class="time" id="time">--:--:--</div>
+
+            <div class="status">● Chưa Check In</div>
+
+            <div class="box">
+                Giờ Check In: --:-- <br>
+                Thời gian làm việc: 00:00:00
+            </div>
+
+            <button class="btn">Check In</button>
+        </div>
+
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById("time").innerText = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+    </script>
+
+</body>
+
+</html>

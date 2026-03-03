@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Xuất báo cáo Timesheet</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<!-- POPUP -->
+<div id="popup" class="popup hidden">
+    <div class="popup-box">
+        <h3>✔ Thành công</h3>
+        <p>Báo cáo đã được xuất!</p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+</div>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System (Admin)</div>
+        <div>Xin chào, Admin</div>
+    </div>
+
+    <div class="container">
+
+        <div class="sidebar">
+            <a href="#">Dashboard</a>
+            <a href="#">Duyệt Timesheet</a>
+            <a href="#">Duyệt nghỉ phép</a>
+            <a href="#">Xuất báo cáo</a>
+            <a href="#">Quản lý nhân viên</a>
+        </div>
+
+        <div class="content">
+            <h2>Xuất báo cáo Timesheet</h2>
+
+            <div class="card">
+                <label>Từ ngày</label>
+                <input type="date">
+
+                <label>Đến ngày</label>
+                <input type="date">
+
+                <label>Định dạng</label>
+                <select>
+                    <option>Excel (.xlsx)</option>
+                    <option>CSV (.csv)</option>
+                </select>
+
+                <button onclick="exportData()">Xuất báo cáo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP -->
+    <div id="popup" class="popup hidden">
+        <div class="popup-box">
+            <h3>✔ Thành công</h3>
+            <p>Xuất báo cáo thành công!</p>
+            <button onclick="closePopup()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        function exportData() {
+            document.getElementById("popup").classList.remove("hidden");
+        }
+
+        function closePopup() {
+            document.getElementById("popup").classList.add("hidden");
+        }
+    </script>
+
+</body>
+
+</html>

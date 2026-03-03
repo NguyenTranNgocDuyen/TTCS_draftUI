@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        /* CARDS */
+        .cards {
+            display: flex;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .number {
+            font-size: 28px;
+            color: #2563eb;
+            margin-top: 10px;
+        }
+
+        /* TABLE */
+        .table-box {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System (Admin)</div>
+        <div>Xin chào, Admin</div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a>Dashboard</a>
+            <a>Duyệt Timesheet</a>
+            <a>Duyệt nghỉ phép</a>
+            <a>Quản lý nhân viên</a>
+        </div>
+
+        <div class="content">
+            <h2>Dashboard</h2>
+
+            <!-- CARDS -->
+            <div class="cards">
+                <div class="card">
+                    <div>Nhân viên</div>
+                    <div class="number">25</div>
+                </div>
+
+                <div class="card">
+                    <div>Đơn nghỉ chờ duyệt</div>
+                    <div class="number">2</div>
+                </div>
+
+                <div class="card">
+                    <div>Đơn đã duyệt</div>
+                    <div class="number">10</div>
+                </div>
+            </div>
+
+            <!-- RECENT ACTIVITY -->
+            <div class="table-box">
+                <h3>Hoạt động gần đây</h3>
+                <table>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Hành động</th>
+                        <th>Thời gian</th>
+                    </tr>
+
+                    <tr>
+                        <td>Nguyễn Văn A</td>
+                        <td>Đơn nghỉ đã được duyệt</td>
+                        <td>03/03/2026</td>
+                    </tr>
+
+                    <tr>
+                        <td>Trần Thị B</td>
+                        <td>Check-in</td>
+                        <td>02/03/2026</td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

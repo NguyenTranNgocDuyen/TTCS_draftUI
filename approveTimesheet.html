@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Duyệt Timesheet</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .approve {
+            background: #22c55e;
+        }
+
+        .deny {
+            background: #ef4444;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .approved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System (Admin)</div>
+        <div>Xin chào, Admin</div>
+    </div>
+
+    <div class="container">
+
+        <div class="sidebar">
+            <a href="#">Dashboard</a>
+            <a href="#">Duyệt Timesheet</a>
+            <a href="#">Duyệt nghỉ phép</a>
+            <a href="#">Quản lý nhân viên</a>
+        </div>
+
+        <div class="content">
+            <h2>Duyệt Timesheet</h2>
+
+            <div class="card">
+                <table>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Ngày</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Tổng giờ</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+
+                    <tr>
+                        <td>Nguyễn Văn A</td>
+                        <td>03/03/2026</td>
+                        <td>08:00</td>
+                        <td>17:00</td>
+                        <td>8h</td>
+                        <td><span id="status" class="status pending">Chờ duyệt</span></td>
+                        <td>
+                            <button class="btn approve" onclick="approve()">Duyệt</button>
+                            <button class="btn deny" onclick="deny()">Từ chối</button>
+                        </td>
+                    </tr>
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP -->
+    <div id="popup" class="popup hidden">
+        <div class="popup-box">
+            <h3 id="msg">✔ Thành công</h3>
+            <p id="desc"></p>
+            <button onclick="closePopup()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        function approve() {
+            document.getElementById("status").innerText = "Đã duyệt";
+            document.getElementById("status").className = "status approved";
+
+            document.getElementById("msg").innerText = "✔ Thành công";
+            document.getElementById("desc").innerText = "Đã duyệt timesheet!";
+            document.getElementById("popup").classList.remove("hidden");
+        }
+
+        function deny() {
+            document.getElementById("status").innerText = "Từ chối";
+            document.getElementById("status").className = "status pending";
+
+            document.getElementById("msg").innerText = "✔ Thành công";
+            document.getElementById("desc").innerText = "Đã từ chối timesheet!";
+            document.getElementById("popup").classList.remove("hidden");
+        }
+
+        function closePopup() {
+            document.getElementById("popup").classList.add("hidden");
+        }
+    </script>
+
+</body>
+
+</html>

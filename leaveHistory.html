@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử nghỉ phép</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #1e2a38;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #cbd5e1;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background: #1e293b;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .approved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .balance {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e0f2fe;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div>Timesheet System</div>
+        <div>Xin chào, User</div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="#">Dashboard</a>
+            <a href="#">Chấm công</a>
+            <a href="#">Xin nghỉ phép</a>
+            <a href="#">Lịch sử</a>
+        </div>
+
+        <div class="content">
+            <h2>Lịch sử nghỉ phép</h2>
+
+            <!-- Số dư phép -->
+            <div class="balance">
+                <strong>Số dư phép còn lại:</strong> 5 ngày
+            </div>
+
+            <!-- Table -->
+            <div class="card">
+                <table>
+                    <tr>
+                        <th>Loại nghỉ</th>
+                        <th>Từ ngày</th>
+                        <th>Đến ngày</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                    </tr>
+
+                    <tr>
+                        <td>Nghỉ phép năm</td>
+                        <td>05/03/2026</td>
+                        <td>06/03/2026</td>
+                        <td>Du lịch</td>
+                        <td><span class="status pending">Chờ duyệt</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>Nghỉ bệnh</td>
+                        <td>01/03/2026</td>
+                        <td>01/03/2026</td>
+                        <td>Ốm</td>
+                        <td><span class="status approved">Đã duyệt</span></td>
+                    </tr>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>
