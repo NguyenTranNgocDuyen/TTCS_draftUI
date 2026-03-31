@@ -1,3 +1,3 @@
-export default function Header({username}){
+export default function Header(){
     
 }
