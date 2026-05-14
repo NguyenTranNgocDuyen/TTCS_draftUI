@@ -1,10 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { IsBoolean, IsDate, IsDateString, IsEmail, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID } from "class-validator";
 
 
 export default class UserDto {
 
+    @Expose()
     @IsString()
     @IsUUID()
     userID: string
@@ -13,6 +14,7 @@ export default class UserDto {
         example: "abc@gmail.com",
         required: true
     })
+    @Expose()
     @IsString()
     @IsEmail()
     email: string
@@ -22,14 +24,18 @@ export default class UserDto {
         example: "hahaha",
         required: true
     })
+    @Expose()
+
     @IsString()
     username: string
 
+    @Expose()
     @IsString()
     @IsUUID()
     @IsOptional()
     departmentID: string | null
 
+    @Expose()
     @IsString()
     @IsOptional()
     roleId: string | null

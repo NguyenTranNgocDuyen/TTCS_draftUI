@@ -14,6 +14,7 @@ import { ENV } from 'src/common/env';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserAccessGaurd } from './guards/access.guard';
 import { RequirePermission } from 'src/common/require-permissions.decorator';
+import { plainToInstance } from 'class-transformer';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {

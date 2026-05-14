@@ -35,7 +35,7 @@ export class AuthService {
         return {
             statusCode,
             message,
-            data
+            data : plainToInstance(UserDto, data , {excludeExtraneousValues : true})
         }
     }
 
@@ -72,7 +72,7 @@ export class AuthService {
                 data: {
                     accessToken: newAcessToken,
                     refreshToken: newRefreshToken,
-                    user: user
+                    user: plainToInstance(UserDto , user, {excludeExtraneousValues : true})
                 }
             }
         }
@@ -142,7 +142,7 @@ export class AuthService {
             data: {
                 refreshToken: newRefreshToken,
                 accessToken: newAcessToken,
-                user: updateUser.data
+                user: plainToInstance(UserDto , updateUser.data , {excludeExtraneousValues: true})
             }
         }
     }

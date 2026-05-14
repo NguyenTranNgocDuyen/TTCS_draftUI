@@ -8,6 +8,6 @@ import { MonthlyTimeSheetModule } from 'src/monthly-time-sheet/monthly-time-shee
 @Module({
   controllers: [WarningController],
   providers: [WarningService],
-  imports:[UserModule , forwardRef(() => AttendanceModuleModule), forwardRef(() => MonthlyTimeSheetModule)]
+  imports:[UserModule , forwardRef(() => AttendanceModuleModule)]
 })
 export class WarningModule {}

@@ -1,29 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { CreateWarningDto } from './dto/create-warning.dto';
 import ResponseDto, { DefaultResponse } from 'src/common/response.dto';
 import WarningDto from './dto/warning.dto';
-import { CREATED_RESPONE, OK_CODE } from 'src/common/code';
+import { constTimeZone, CREATED_RESPONE, OK_CODE } from 'src/common/code';
 import { AttendanceModuleService } from 'src/attendance-module/attendance-module.service';
 import { Cron } from '@nestjs/schedule';
 import { compareSync } from 'bcrypt';
 import { time } from 'console';
 import { MonthlyTimeSheetService } from 'src/monthly-time-sheet/monthly-time-sheet.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class WarningService {
   constructor(private readonly userService: UserService,
     private readonly prismaService: PrismaService,
     private readonly attendenceService: AttendanceModuleService,
-    private readonly monthlyTimesheetService : MonthlyTimeSheetService
   ) { }
-  async sendWarning(createWarningDto: CreateWarningDto): Promise<ResponseDto<WarningDto>> {
+  async sendWarning(createWarningDto: CreateWarningDto, tx? : Prisma.TransactionClient): Promise<ResponseDto<WarningDto>> {
 
     const now = new Date()
     const { userID, content } = createWarningDto
-
-    const userGet = await this.userService.getUserByUserID(userID)
+    const db : Prisma.TransactionClient = tx?? this.prismaService;
+    const userGet = await this.userService.getUserByUserID(userID , tx );
 
     if (userGet.statusCode !== OK_CODE || userGet.data === undefined)
       return {
@@ -34,7 +34,7 @@ export class WarningService {
 
 
 
-    const warning: WarningDto = await this.prismaService.warning.create({
+    const warning: WarningDto = await db.warning.create({
       data: {
         userID,
         content,
@@ -50,28 +50,39 @@ export class WarningService {
   }
 
 
-  @Cron('10 55 10 * * *', {
-  })
-  async warningEmployeeMissedCheckOut(): Promise<ResponseDto<DefaultResponse>> {
+  @Cron('59 59 23 * * *', {
+  timeZone: constTimeZone,
+})
+  async warningEmployeeMissedCheckOut(tx? : Prisma.TransactionClient): Promise<ResponseDto<DefaultResponse>> {
+
+    const db : Prisma.TransactionClient = tx ?? this.prismaService;
     const now = new Date()
-    console.log('cron' + now)
-    const { statusCode, message, data } = await this.attendenceService.GetAllEmployeeDindNotCheckOutOfDay(now.toISOString().split('T')[0])
+    const todayLocalString = now.toLocaleDateString('sv-SE', { 
+    timeZone: constTimeZone 
+  }); 
+    const { statusCode, message, data } = await this.attendenceService.GetAllEmployeeDindNotCheckOutOfDay(todayLocalString, tx)
     if (statusCode !== OK_CODE || data === undefined) {
       return { statusCode, message }
     }
-    console.log(data)
     if (data.length === 0)
       return {
         statusCode: OK_CODE,
         message: "Don't have any employee missed check out"
       }
 
-    console.log(data)
     for (var timesheetEntry  of data) {
-      console.log(timesheetEntry)
 
-      
-      var sendWarning = await this.sendWarning({ userID: timesheetEntry.userID, content: `Missed checked out in day ${now.toLocaleDateString()}` })
+      const monthly = await db.monthlyTimesheet.findUnique({
+        where:{
+          monthlyTimesheetID : timesheetEntry.monthlyTimesheetID
+        }
+      });
+
+      if (monthly === null){
+        console.log(`monthlyTimesheetID = ${timesheetEntry.monthlyTimesheetID} is not found !!! `)
+        continue
+      }
+      var sendWarning = await this.sendWarning({ userID: monthly.userID, content: `Missed checked out in day ${now.toLocaleDateString()}` }, tx )
       if (sendWarning.statusCode !== CREATED_RESPONE)
         return {
           statusCode: sendWarning.statusCode,

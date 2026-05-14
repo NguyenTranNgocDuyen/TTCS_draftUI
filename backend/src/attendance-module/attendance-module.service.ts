@@ -4,7 +4,7 @@ import CheckInDto from './dto/checkIn.dto';
 import ResponseDto, { AnotherError, DefaultResponse } from 'src/common/response.dto';
 import { UserService } from 'src/user/user.service';
 import UserDto from 'src/user/dto/user.dto';
-import { BADREQUEST_CODE, CREATED_RESPONE, Interval_Server_Network_Exeception_Code, NOTFOUND_CODE, OK_CODE, PENDING } from 'src/common/code';
+import { BADREQUEST_CODE, constTimeZone, CREATED_RESPONE, Interval_Server_Network_Exeception_Code, NOTFOUND_CODE, OK_CODE, PENDING } from 'src/common/code';
 import { MonthlyTimeSheetService } from 'src/monthly-time-sheet/monthly-time-sheet.service';
 import { NOTFOUND } from 'node:dns';
 import { time, timeStamp } from 'node:console';
@@ -77,13 +77,20 @@ export class AttendanceModuleService {
                     };
                 }
 
+                // const now = new Date();
+
+                // const currentDateString = new Intl.DateTimeFormat('en-CA').format(now); // Kết quả: "2026-05-14"
+                // const currentDateString = [
+                //     now.getFullYear(),
+                //     String(now.getMonth() + 1).padStart(2, '0'),
+                //     String(now.getDate()).padStart(2, '0')
+                // ].join('-');
+
                 const now = new Date();
 
-                const currentDateString = [
-                    now.getFullYear(),
-                    String(now.getMonth() + 1).padStart(2, '0'),
-                    String(now.getDate()).padStart(2, '0')
-                ].join('-');
+                const currentDateString = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: constTimeZone, // Ép định dạng theo múi giờ Việt Nam
+                }).format(now);
 
 
                 let timesheet = await this.monthlyTimesheetService.getMonthlyTimeSheet(
@@ -101,7 +108,7 @@ export class AttendanceModuleService {
                 }
 
 
-                if (timesheet.statusCode !== CREATED_RESPONE && timesheet.statusCode !== OK_CODE ) {
+                if (timesheet.statusCode !== CREATED_RESPONE && timesheet.statusCode !== OK_CODE) {
                     throw new BadGatewayException(timesheet.message || 'Failed to get/create monthly timesheet');
                 }
 
@@ -112,7 +119,7 @@ export class AttendanceModuleService {
 
                 const lastEntry = await dbCtx.timesheetEntry.findFirst({
                     where: {
-                        date: currentDateString,
+                        date: currentDateString + ' ' + constTimeZone,
                         monthlyTimesheetID: monthlyTimesheetID
                     },
                     orderBy: { checkIn: 'desc' }
@@ -122,7 +129,7 @@ export class AttendanceModuleService {
                     await dbCtx.timesheetEntry.create({
                         data: {
                             monthlyTimesheetID: monthlyTimesheetID,
-                            date: currentDateString,
+                            date: currentDateString + ' '+ constTimeZone,
                             IPAddress,
                             checkIn: now,
                             status: PENDING
@@ -156,11 +163,11 @@ export class AttendanceModuleService {
         }
     }
     async checkOut(
-        userID: string, 
-        IPAddress: string | undefined, 
+        userID: string,
+        IPAddress: string | undefined,
         tx?: Prisma.TransactionClient
     ): Promise<ResponseDto<any>> {
-        
+
         // 1. FAIL-FAST
         if (!IPAddress) {
             return {
@@ -171,7 +178,7 @@ export class AttendanceModuleService {
 
         try {
             const executeLogic = async (dbCtx: Prisma.TransactionClient): Promise<ResponseDto<any>> => {
-                
+
                 // --- BƯỚC 1: KIỂM TRA USER ---
                 const userGet = await this.userService.getUserByUserID(userID, dbCtx);
                 if (userGet.statusCode !== OK_CODE || !userGet.data) {
@@ -179,26 +186,26 @@ export class AttendanceModuleService {
                 }
 
                 const now = new Date();
-                
+
                 // Chuẩn hóa format ngày (YYYY-MM-DD)
                 const currentDateString = [
                     now.getFullYear(),
                     String(now.getMonth() + 1).padStart(2, '0'),
                     String(now.getDate()).padStart(2, '0')
-                ].join('-'); 
+                ].join('-');
 
                 // --- BƯỚC 2: LẤY BẢNG CÔNG THÁNG CỦA USER NÀY ---
                 const timesheet = await this.monthlyTimesheetService.getMonthlyTimeSheet(
-                    userID, 
-                    { month: now.getMonth() + 1, year: now.getFullYear() }, 
+                    userID,
+                    { month: now.getMonth() + 1, year: now.getFullYear() },
                     dbCtx
                 );
 
                 // Nếu tháng này chưa có bảng công -> Chắc chắn chưa từng Check-in
                 if (timesheet.statusCode !== OK_CODE || !timesheet.data) {
-                    return { 
-                        statusCode: BADREQUEST_CODE, 
-                        message: 'You haven\'t checked in yet.' 
+                    return {
+                        statusCode: BADREQUEST_CODE,
+                        message: 'You haven\'t checked in yet.'
                     };
                 }
 
@@ -209,7 +216,7 @@ export class AttendanceModuleService {
                 const lastEntry = await dbCtx.timesheetEntry.findFirst({
                     where: {
                         monthlyTimesheetID: monthlyTimesheetID,
-                        date: currentDateString
+                        date: currentDateString + ' ' + constTimeZone
                     },
                     orderBy: { checkIn: 'desc' } // Lấy bản ghi trễ nhất
                 });
@@ -217,9 +224,9 @@ export class AttendanceModuleService {
                 // --- BƯỚC 4: KIỂM TRA CÁC ĐIỀU KIỆN ---
                 // 1. Không có lượt chấm công nào, hoặc lượt gần nhất đã check-out rồi
                 if (!lastEntry || lastEntry.checkOut !== null) {
-                    return { 
-                        statusCode: BADREQUEST_CODE, 
-                        message: 'You haven\'t checked in or have already checked out.' 
+                    return {
+                        statusCode: BADREQUEST_CODE,
+                        message: 'You haven\'t checked in or have already checked out.'
                     };
                 }
 
@@ -243,26 +250,26 @@ export class AttendanceModuleService {
 
                 return {
                     // Trả về 200 OK thay vì 201 CREATED (Vì hành động này là UPDATE chứ không tạo mới dòng nào cả)
-                    statusCode: OK_CODE, 
+                    statusCode: OK_CODE,
                     message: 'Check-out successful!'
                 };
             };
 
             // THỰC THI TRANSACTION
             if (tx) {
-                return await executeLogic(tx); 
+                return await executeLogic(tx);
             }
 
-            return await this.prismaService.$transaction(executeLogic); 
+            return await this.prismaService.$transaction(executeLogic);
 
         } catch (error) {
             if (error instanceof HttpException) {
                 throw error;
             }
-            
+
             console.error('Error in checkOut:', error);
             return {
-                statusCode: Interval_Server_Network_Exeception_Code, 
+                statusCode: Interval_Server_Network_Exeception_Code,
                 message: 'Internal server error occurred during check-out'
             };
         }
@@ -272,9 +279,10 @@ export class AttendanceModuleService {
     async GetAllEmployeeDindNotCheckOutOfDay(today: string, tx?: Prisma.TransactionClient): Promise<DefaultResponse> {
 
         const db: Prisma.TransactionClient = tx ?? this.prismaService
+        console.log(today)
         const allEmployeeDidntCheckOut = await db.timesheetEntry.findMany({
             where: {
-                date: today,
+                date: today + ' '+ constTimeZone,
                 checkOut: null
             }
         })

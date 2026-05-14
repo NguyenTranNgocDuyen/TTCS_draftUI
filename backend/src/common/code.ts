@@ -1,5 +1,5 @@
 import  { AnotherError } from "./response.dto"
-
+import * as dotenv from 'dotenv';
 const NOTFOUND_CODE:number = 404
 const  OK_CODE : number = 200
 const CONFLIG_CODE : number = 409
@@ -44,3 +44,7 @@ export const nameTypeLeave_LeaveWithoutPermission: string = 'Leave without permi
 export {NOTFOUND_CODE , OK_CODE , CONFLIG_CODE, CREATED_RESPONE , BADREQUEST_CODE, ANOTHER_ERROR_RESPONE, UNAUTHORIZED_CODE
     ,Interval_Server_Network_Exeception_Code
 }
+
+
+
+export const constTimeZone : string = process.env.timeZone ?? 'Asia/Ho_Chi_Minh'
