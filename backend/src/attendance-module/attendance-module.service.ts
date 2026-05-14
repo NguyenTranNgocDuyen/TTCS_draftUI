@@ -92,7 +92,7 @@ export class AttendanceModuleService {
                     dbCtx
                 );
 
-                if (timesheet.statusCode === NOTFOUND_CODE) {
+                if (timesheet.statusCode !== OK_CODE) {
                     timesheet = await this.monthlyTimesheetService.createMonthlyTimeSheet(
                         userID,
                         { month: now.getMonth() + 1, year: now.getFullYear() },
@@ -100,10 +100,14 @@ export class AttendanceModuleService {
                     );
                 }
 
-                if (timesheet.statusCode !== CREATED_RESPONE || timesheet.statusCode !== OK_CODE || !timesheet.data) {
+
+                if (timesheet.statusCode !== CREATED_RESPONE && timesheet.statusCode !== OK_CODE ) {
                     throw new BadGatewayException(timesheet.message || 'Failed to get/create monthly timesheet');
                 }
 
+
+                if (timesheet.data === undefined)
+                    throw new BadGatewayException('timesshet data is undefined ')
                 const monthlyTimesheetID = timesheet.data.monthlyTimesheetID;
 
                 const lastEntry = await dbCtx.timesheetEntry.findFirst({
@@ -274,6 +278,7 @@ export class AttendanceModuleService {
                 checkOut: null
             }
         })
+
 
         if (allEmployeeDidntCheckOut.length === 0)
             return {

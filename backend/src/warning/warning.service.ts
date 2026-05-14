@@ -7,76 +7,83 @@ import WarningDto from './dto/warning.dto';
 import { CREATED_RESPONE, OK_CODE } from 'src/common/code';
 import { AttendanceModuleService } from 'src/attendance-module/attendance-module.service';
 import { Cron } from '@nestjs/schedule';
+import { compareSync } from 'bcrypt';
+import { time } from 'console';
+import { MonthlyTimeSheetService } from 'src/monthly-time-sheet/monthly-time-sheet.service';
 
 @Injectable()
 export class WarningService {
-  constructor (private readonly userService : UserService,
-    private readonly prismaService : PrismaService,
-    private readonly attendenceService : AttendanceModuleService
-  ){}
-  async sendWarning(createWarningDto : CreateWarningDto) : Promise<ResponseDto<WarningDto>> {
+  constructor(private readonly userService: UserService,
+    private readonly prismaService: PrismaService,
+    private readonly attendenceService: AttendanceModuleService,
+    private readonly monthlyTimesheetService : MonthlyTimeSheetService
+  ) { }
+  async sendWarning(createWarningDto: CreateWarningDto): Promise<ResponseDto<WarningDto>> {
 
     const now = new Date()
-    const {userID , content}=  createWarningDto
+    const { userID, content } = createWarningDto
 
     const userGet = await this.userService.getUserByUserID(userID)
 
     if (userGet.statusCode !== OK_CODE || userGet.data === undefined)
-      return{
-        statusCode : userGet.statusCode,
-        message : userGet.message
+      return {
+        statusCode: userGet.statusCode,
+        message: userGet.message
       }
-    
 
-    
-    
-    const warning:  WarningDto = await this.prismaService.warning.create({
-      data :{
-        userID ,
+
+
+
+    const warning: WarningDto = await this.prismaService.warning.create({
+      data: {
+        userID,
         content,
       }
     })
 
     return {
-      statusCode : CREATED_RESPONE,
-      message:'Created warning successfull !!!!',
-      data : warning
+      statusCode: CREATED_RESPONE,
+      message: 'Created warning successfull !!!!',
+      data: warning
     }
 
   }
 
 
-  @Cron('0 30 14 * * *' ,{
+  @Cron('10 55 10 * * *', {
   })
-  async warningEmployeeMissedCheckOut() :Promise<ResponseDto<DefaultResponse>>{
+  async warningEmployeeMissedCheckOut(): Promise<ResponseDto<DefaultResponse>> {
     const now = new Date()
     console.log('cron' + now)
-    const {statusCode,message,data} = await this.attendenceService.GetAllEmployeeDindNotCheckOutOfDay(now.toLocaleDateString())
-    if (statusCode !== OK_CODE || data!== undefined){
-      return {statusCode,message}
+    const { statusCode, message, data } = await this.attendenceService.GetAllEmployeeDindNotCheckOutOfDay(now.toISOString().split('T')[0])
+    if (statusCode !== OK_CODE || data === undefined) {
+      return { statusCode, message }
     }
+    console.log(data)
+    if (data.length === 0)
+      return {
+        statusCode: OK_CODE,
+        message: "Don't have any employee missed check out"
+      }
 
+    console.log(data)
+    for (var timesheetEntry  of data) {
+      console.log(timesheetEntry)
 
-    if (data.length === 0 )
-      return { 
-    statusCode : OK_CODE, 
-    message:"Don't have any employee missed check out"
-  }
-
-    for (var i of data)
-    {
-      var sendWarning = await this.sendWarning({userID : data.userID , content : `Missed checked out in day ${now.toLocaleDateString()}`})
+      
+      var sendWarning = await this.sendWarning({ userID: timesheetEntry.userID, content: `Missed checked out in day ${now.toLocaleDateString()}` })
       if (sendWarning.statusCode !== CREATED_RESPONE)
-        return{
-      statusCode : sendWarning.statusCode,
-    message: 'sendWarning not successfull because' + sendWarning.message}
+        return {
+          statusCode: sendWarning.statusCode,
+          message: 'sendWarning not successfull because' + sendWarning.message
+        }
     }
 
     return {
-      statusCode : CREATED_RESPONE,
-      message:'Send warning successfull!!!'
+      statusCode: CREATED_RESPONE,
+      message: 'Send warning successfull!!!'
     }
-    
 
-  } 
+
+  }
 }

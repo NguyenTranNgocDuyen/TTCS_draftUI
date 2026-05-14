@@ -15,6 +15,7 @@ import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WarningModule } from './warning/warning.module';
 import { TypeLeaveModule } from './type-leave/type-leave.module';
+import { LeaveApplicationModule } from './leave-application/leave-application.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { TypeLeaveModule } from './type-leave/type-leave.module';
     NotificationModule,
     ScheduleModule.forRoot(),
     WarningModule,
-    TypeLeaveModule
+    TypeLeaveModule,
+    LeaveApplicationModule
     
   ],
   controllers: [AppController],

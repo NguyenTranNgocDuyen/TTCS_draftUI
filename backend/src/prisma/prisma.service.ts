@@ -13,13 +13,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       throw new Error('DATABASE_URL is not defined in .env');
     }
 
-    // 1. Tạo Pool kết nối thực tế bằng thư viện pg
     const pool = new Pool({ connectionString: url });
     
-    // 2. Bọc Pool đó bằng Prisma Adapter
     const adapter = new PrismaPg(pool);
 
-    // 3. Truyền adapter vào PrismaClient (Không dùng datasources nữa)
     super({ adapter });
   }
 

@@ -117,7 +117,6 @@ model LeaveApplication {
   leaveApplicationID String   @id @default(uuid()) @db.Uuid
   senderID           String   @db.Uuid
   
-  // ID của người thực tế đã nhấn nút Duyệt/Từ chối (Audit Trail)
   reviewerID         String?  @db.Uuid 
   
   typeLeaveID        String   @db.Uuid
@@ -125,24 +124,19 @@ model LeaveApplication {
   startDate          DateTime
   endDate            DateTime
   
-  // Số ngày nghỉ thực tế (ví dụ: 1, 0.5, 2.5) 
-  // Giúp tính toán remainDaysofLeave chính xác và nhanh hơn
   duration           Float    
   
   reason             String   @db.Text
   status             String   @default("pending") // 'pending', 'approved', 'rejected', 'cancelled'
   
-  // Lý do từ chối nếu có
   reasonReject       String?  @db.Text
   
   createdAt          DateTime @default(now())
   
-  // Thời điểm đơn được xử lý (Duyệt hoặc Từ chối)
   reviewedAt         DateTime?
 
-  // Relations
   sender             User      @relation("Sender", fields: [senderID], references: [userID], onDelete: Restrict)
-  reviewer           User?     @relation("Reviewer", fields: [reviewerID], references: [userID], onDelete: Restrict)
+  reviewer           User?     @relation("Reviewer", fields: [reviewerID], references: [userID], onDelete: Restrict , onUpdate: Cascade)
   typeLeave          TypeLeave @relation(fields: [typeLeaveID], references: [typeLeaveID], onDelete: Restrict)
 
   @@map("leave_applications")

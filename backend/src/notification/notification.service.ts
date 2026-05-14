@@ -54,12 +54,10 @@ export class NotificationService {
         };
       };
 
-      // 4. Nếu có tx truyền vào từ ngoài, chạy thẳng logic bằng tx đó (KHÔNG mở transaction mới)
       if (tx) {
         return await executeLogic(tx);
       }
 
-      // 5. Nếu chạy độc lập (tx là undefined), tự mở một transaction mới
       return await this.prismaService.$transaction(async (tx) => executeLogic(tx));
 
     } catch (error) {

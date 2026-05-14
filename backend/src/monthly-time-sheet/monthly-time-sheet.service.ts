@@ -69,13 +69,13 @@ export class MonthlyTimeSheetService {
                     throw new ConflictException(message)
 
                 const user = await this.userService.getUserByUserID(userID, dCbt)
+
                 if (user.statusCode !== OK_CODE || user.data === undefined || user.data.departmentID === null || user.data.departmentID === undefined)
                     throw new BadRequestException(user.message)
 
                 const department = await this.departmentService.getDepartmentById(user.data.departmentID, dCbt);
                 if (department.statusCode !== OK_CODE || department.data === undefined)
                     throw new BadRequestException(department.message)
-
 
                 const reviewerID = department.data.managerID;
                 if (reviewerID === undefined || reviewerID === null)

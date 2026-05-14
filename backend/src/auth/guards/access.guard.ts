@@ -24,7 +24,6 @@ export class UserAccessGaurd implements CanActivate {
         const { userID, email, username ,departmentID } = request.params;
         
 
-        // 2. Xác định input và type để tránh check thừa những giá trị undefined
         let input: string = '';
         let type: string = '';
 
@@ -38,7 +37,6 @@ export class UserAccessGaurd implements CanActivate {
             input = username;
             type = 'username';
         } 
-        // 3. Thực hiện check quyền (Chỉ check 3 lần tối đa)
 
         for (const permission of allowedPermission) {
             if (permission === 'admin')
@@ -46,12 +44,12 @@ export class UserAccessGaurd implements CanActivate {
                     return true;
                 }
             if (permission === 'manager')
-                if ((await this.userService.IsMe(currentUser, input, type)).statusCode === OK_CODE) {
+                if ((await this.userService.checkAuthIsMyManager(currentUser, input, type)).statusCode === OK_CODE) {
                     return true;
                 }
 
             if (permission === 'me')
-                if ((await this.userService.checkAuthIsMyManager(currentUser, input, type)).statusCode === OK_CODE) {
+                if ((await this.userService.IsMe(currentUser, input, type)).statusCode === OK_CODE) {
                     return true;
                 }
 

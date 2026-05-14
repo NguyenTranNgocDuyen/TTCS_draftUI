@@ -109,7 +109,7 @@ export default class FullUserDto{
         })
         @IsString()
         @IsOptional()
-        departmentID?:string | null
+        departmentID:string  | null 
     
     
         @IsString()

@@ -3,10 +3,11 @@ import { WarningService } from './warning.service';
 import { WarningController } from './warning.controller';
 import { UserModule } from 'src/user/user.module';
 import { AttendanceModuleModule } from 'src/attendance-module/attendance-module.module';
+import { MonthlyTimeSheetModule } from 'src/monthly-time-sheet/monthly-time-sheet.module';
 
 @Module({
   controllers: [WarningController],
   providers: [WarningService],
-  imports:[UserModule , forwardRef(() => AttendanceModuleModule)]
+  imports:[UserModule , forwardRef(() => AttendanceModuleModule), forwardRef(() => MonthlyTimeSheetModule)]
 })
 export class WarningModule {}

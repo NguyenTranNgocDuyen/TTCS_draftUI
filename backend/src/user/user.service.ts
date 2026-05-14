@@ -595,12 +595,13 @@ export class UserService {
                 message: userGet.message
             }
 
-        if (userGet.data.departmentName == undefined)
+        if (userGet.data === undefined || userGet.data.departmentID === undefined || userGet.data.departmentID === null)
             return {
                 statusCode: NOTFOUND_CODE,
                 message: 'user is not in any department'
             }
-        const departmentGet: ResponseDto<DepartmentDto> = await this.departmentService.getDepartmentByDeparmentName(userGet.data.departmentName);
+
+        const departmentGet: ResponseDto<DepartmentDto> = await this.departmentService.getDepartmentById(userGet.data.departmentID);
 
         if (departmentGet.statusCode !== OK_CODE || departmentGet.data === undefined)
             return {
@@ -608,12 +609,12 @@ export class UserService {
                 message: departmentGet.message
             }
 
+        
         if (departmentGet.data.managerID === undefined)
             return {
                 statusCode: NOTFOUND_CODE,
                 message: 'This department dont have manager'
             }
-
         return {
             statusCode: OK_CODE,
             message: 'get departmentID successfull',

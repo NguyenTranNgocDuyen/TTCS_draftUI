@@ -24,6 +24,7 @@ export const REJECTED:  string= 'rejected'
 
 export const PENDING : string  ='pending'
 
+export const CANCELED : string = 'cancleled'
 // const nameRole 
 
 export const nameRole_admin : string  = 'admin'
@@ -36,8 +37,7 @@ export const nameRole_noneRole : string  = 'none Role'
 
 export const nameTypeLeave_AnnualLeave : string = 'Annual Leave'
 export const nameTypeLeave_LeaveWithPermission : string = 'Leave with permission'
-
-export const nameTypeLeave_LeaveWithoutPermission: string = 'Leave with permission'
+export const nameTypeLeave_LeaveWithoutPermission: string = 'Leave without permission'
 
 
 
