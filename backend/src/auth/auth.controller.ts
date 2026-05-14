@@ -1,4 +1,4 @@
-import { BadRequestException, Headers, Body, ConflictException, Controller, NotAcceptableException, NotFoundException, Post, UnauthorizedException, UseGuards, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
+import { BadRequestException, Headers, Body, ConflictException, Controller, NotAcceptableException, NotFoundException, Post, UnauthorizedException, UseGuards, Param, ParseUUIDPipe, Patch, Get, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBadGatewayResponse, ApiBearerAuth, ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiProperty, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import RegiesterDto from './dto/register.dto';
@@ -16,11 +16,44 @@ import { UserAccessGaurd } from './guards/access.guard';
 import { RequirePermission } from 'src/common/require-permissions.decorator';
 import { plainToInstance } from 'class-transformer';
 import { measureMemory } from 'vm';
+import { AuthGuard } from '@nestjs/passport';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { reportUnhandledError } from 'rxjs/internal/util/reportUnhandledError';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  
-  constructor(private readonly  authService: AuthService){}
+
+  constructor(private readonly authService: AuthService) { }
+
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req) {
+    console.log('a')
+  }
+
+  @Get('google-redirect')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req ) {
+    const { statusCode, message, data } = await this.authService.handleGoogleLogin(req.user);
+
+    if (statusCode === CREATED_RESPONE)
+      return {
+        statusCode, message, data
+      }
+
+
+    throw new BadRequestException(statusCode, message)
+    // Cách 1: Trả về JSON (thường dùng cho test hoặc API thuần)
+    // return res.json(result);
+
+    // Cách 2: Redirect về Frontend kèm Token trên URL (Phổ biến cho SPA)
+    // const frontendUrl = `http://localhost:3000/login-success?token=${result.access_token}`;
+    // return res.redirect(frontendUrl);
+  }
+
+
+
   @Post("/register")
 
   @ApiNotFoundResponse()
@@ -45,26 +78,28 @@ export class AuthController {
     )
   }
 
+
+
   @Post("/login")
 
   async login(@Body() loginDto: LoginDto): Promise<ResponseDto<AuthDto>> {
-    const {statusCode, message , data} : ResponseDto<AuthDto> = await this.authService.login(loginDto);
+    const { statusCode, message, data }: ResponseDto<AuthDto> = await this.authService.login(loginDto);
 
-    if(statusCode === NOTFOUND_CODE)
-      throw new NotFoundException(statusCode , message);
+    if (statusCode === NOTFOUND_CODE)
+      throw new NotFoundException(statusCode, message);
 
     if (statusCode === CONFLIG_CODE)
-      throw new ConflictException(statusCode , message);
+      throw new ConflictException(statusCode, message);
 
     if (statusCode === UNAUTHORIZED_CODE)
-      throw new UnauthorizedException(statusCode , message)
-    if(statusCode === CREATED_RESPONE)
+      throw new UnauthorizedException(statusCode, message)
+    if (statusCode === CREATED_RESPONE)
       return {
-        statusCode ,
-        message ,
+        statusCode,
+        message,
         data
-    }
-    throw new BadRequestException(statusCode ,message);
+      }
+    throw new BadRequestException(statusCode, message);
   }
 
   @Post("/refreshToken/:userID")
@@ -76,38 +111,38 @@ export class AuthController {
   @ApiNotFoundResponse()
   @ApiBearerAuth()
   @ApiOperation({
-    summary : 'for me'
+    summary: 'for me'
   })
 
-  @UseGuards(JwtAuthGuard , UserAccessGaurd)
+  @UseGuards(JwtAuthGuard, UserAccessGaurd)
 
   @RequirePermission('me')
-  async refreshToken(@Param('userID', new ParseUUIDPipe()) userID: string ,@Body() token : RefreshTokenDto): Promise<ResponseDto<AuthDto>>{
-    const {statusCode , message , data } : ResponseDto<AuthDto> = await this.authService.refreshToken(userID , token.refreshToken);
-     if(statusCode === NOTFOUND_CODE)
-      throw new NotFoundException(statusCode , message);
+  async refreshToken(@Param('userID', new ParseUUIDPipe()) userID: string, @Body() token: RefreshTokenDto): Promise<ResponseDto<AuthDto>> {
+    const { statusCode, message, data }: ResponseDto<AuthDto> = await this.authService.refreshToken(userID, token.refreshToken);
+    if (statusCode === NOTFOUND_CODE)
+      throw new NotFoundException(statusCode, message);
 
     if (statusCode === CONFLIG_CODE)
-      throw new ConflictException(statusCode , message);
+      throw new ConflictException(statusCode, message);
 
-    if(statusCode === UNAUTHORIZED_CODE)
-      throw new UnauthorizedException(statusCode,message);
-    if(statusCode === CREATED_RESPONE)
+    if (statusCode === UNAUTHORIZED_CODE)
+      throw new UnauthorizedException(statusCode, message);
+    if (statusCode === CREATED_RESPONE)
       return {
-        statusCode ,
-        message ,
+        statusCode,
+        message,
         data
-    }
+      }
     throw new BadRequestException(ANOTHER_ERROR_RESPONE);
   }
 
   @ApiOperation({
-    summary : 'for me'
+    summary: 'for me'
   })
- @ApiOkResponse(
+  @ApiOkResponse(
   )
 
-  @UseGuards(JwtAuthGuard , UserAccessGaurd)
+  @UseGuards(JwtAuthGuard, UserAccessGaurd)
 
   @RequirePermission('me')
   @ApiUnauthorizedResponse()
@@ -115,66 +150,68 @@ export class AuthController {
   @ApiConflictResponse()
   @ApiNotFoundResponse()
   @ApiBearerAuth()
-  
- @Post("/logout")
- async logout( userID : string) : Promise<ResponseDto<AnotherError>>{
 
-    const {statusCode , message, data} : ResponseDto <AnotherError> = await this.authService.logout(userID);
+  @Post("/logout")
+  async logout(userID: string): Promise<ResponseDto<AnotherError>> {
 
-   if(statusCode === NOTFOUND_CODE)
-      throw new NotFoundException(statusCode , message);
+    const { statusCode, message, data }: ResponseDto<AnotherError> = await this.authService.logout(userID);
+
+    if (statusCode === NOTFOUND_CODE)
+      throw new NotFoundException(statusCode, message);
 
     if (statusCode === CONFLIG_CODE)
-      throw new ConflictException(statusCode , message);
+      throw new ConflictException(statusCode, message);
 
-    if(statusCode === UNAUTHORIZED_CODE)
-      throw new UnauthorizedException(statusCode,message);
-    if(statusCode === CREATED_RESPONE)
+    if (statusCode === UNAUTHORIZED_CODE)
+      throw new UnauthorizedException(statusCode, message);
+    if (statusCode === CREATED_RESPONE)
       return {
-        statusCode ,
-        message ,
+        statusCode,
+        message,
         data
-    }
-    throw new BadRequestException(ANOTHER_ERROR_RESPONE);   
- }
+      }
+    throw new BadRequestException(ANOTHER_ERROR_RESPONE);
+  }
 
- @Patch('ban/:userID')
- @ApiOperation({summary:'for admin'})
- @UseGuards(JwtAuthGuard ,UserAccessGaurd)
- @RequirePermission('admin')
- @ApiBearerAuth()
- async ban(@Param('userID', new ParseUUIDPipe()) userID : string){
-    const {statusCode , message , data} : ResponseDto<UserDto>= await this.authService.ban(userID, true );
+  @Patch('ban/:userID')
+  @ApiOperation({ summary: 'for admin' })
+  @UseGuards(JwtAuthGuard, UserAccessGaurd)
+  @RequirePermission('admin')
+  @ApiBearerAuth()
+  async ban(@Param('userID', new ParseUUIDPipe()) userID: string) {
+    const { statusCode, message, data }: ResponseDto<UserDto> = await this.authService.ban(userID, true);
     if (statusCode === CONFLIG_CODE)
-      throw new ConflictException(statusCode ,message)
+      throw new ConflictException(statusCode, message)
     if (statusCode === NOTFOUND_CODE)
-      throw new NotFoundException(statusCode ,message)
+      throw new NotFoundException(statusCode, message)
 
     if (statusCode === OK_CODE)
-      return{
-    statusCode ,message ,data}
+      return {
+        statusCode, message, data
+      }
 
-    throw new BadRequestException(statusCode ,message)
- }
+    throw new BadRequestException(statusCode, message)
+  }
 
 
 
- @Patch('unban/:userID')
- @ApiOperation({summary:'for admin'})
- @UseGuards(JwtAuthGuard ,UserAccessGaurd)
- @RequirePermission('admin')
- @ApiBearerAuth()
- async unBan(@Param('userID', new ParseUUIDPipe()) userID : string){
-    const {statusCode , message , data} : ResponseDto<UserDto>= await this.authService.ban(userID, false );
+  @Patch('unban/:userID')
+  @ApiOperation({ summary: 'for admin' })
+  @UseGuards(JwtAuthGuard, UserAccessGaurd)
+  @RequirePermission('admin')
+  @ApiBearerAuth()
+  async unBan(@Param('userID', new ParseUUIDPipe()) userID: string) {
+    const { statusCode, message, data }: ResponseDto<UserDto> = await this.authService.ban(userID, false);
     if (statusCode === CONFLIG_CODE)
-      throw new ConflictException(statusCode ,message)
+      throw new ConflictException(statusCode, message)
     if (statusCode === NOTFOUND_CODE)
-      throw new NotFoundException(statusCode ,message)
+      throw new NotFoundException(statusCode, message)
 
     if (statusCode === OK_CODE)
-      return{
-    statusCode ,message ,data}
+      return {
+        statusCode, message, data
+      }
 
-    throw new BadRequestException(statusCode ,message)
- }
+    throw new BadRequestException(statusCode, message)
+  }
 }

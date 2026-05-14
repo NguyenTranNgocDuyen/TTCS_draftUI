@@ -5,10 +5,11 @@ import { UserModule } from 'src/user/user.module';
 import { BycyptHashedModule } from 'src/common/bycypt-hashed/bycypt-hashed.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy , GoogleStrategy],
   exports:[JwtStrategy],
   imports : [forwardRef(() => UserModule), forwardRef(()=> BycyptHashedModule)]
 })

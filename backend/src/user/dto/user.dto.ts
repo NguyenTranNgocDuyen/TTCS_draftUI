@@ -44,4 +44,8 @@ export default class UserDto {
     @IsBoolean()
     @IsOptional()
     isActive? : boolean | null
+
+    @IsString()
+    @IsOptional()
+    refreshToken?: string | null
 };

@@ -27,10 +27,10 @@ async function bootstrap() {
 
 app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  const port = process.env.PORT ?? 3000
+  const port = process.env.PORT_BACKEND ?? 3000
   await app.listen(port);
 
   console.log(`The website run at localhost:${port}`)
-  
+  console.log(`swagger : http://localhost:${port}/api`)
 }
 bootstrap();

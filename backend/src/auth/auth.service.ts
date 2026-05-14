@@ -1,24 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import RegiesterDto from './dto/register.dto';
-import { readFile } from 'fs';
 import UserDto from 'src/user/dto/user.dto';
 import { UserService } from 'src/user/user.service';
 import ResponseDto, { AnotherError } from 'src/common/response.dto';
-import { ANOTHER_ERROR_RESPONE, BADREQUEST_CODE, CREATED_RESPONE, OK_CODE, UNAUTHORIZED_CODE } from 'src/common/code';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ANOTHER_ERROR_RESPONE, BADREQUEST_CODE, CREATED_RESPONE, NOTFOUND_CODE, OK_CODE, UNAUTHORIZED_CODE } from 'src/common/code';
 import * as jwt from 'jsonwebtoken'
 import LoginDto from './dto/login.dto';
-import strict from 'assert/strict';
 import { BycyptHashedService } from 'src/common/bycypt-hashed/bycypt-hashed.service';
-import { RefreshTokenDto } from './dto/refreshToken.dto';
-import { BrotliDecompress } from 'zlib';
 import AuthDto from './dto/auth.dto';
 import FullUserDto from 'src/user/dto/full-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { ENV } from 'src/common/env';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { reportUnhandledError } from 'rxjs/internal/util/reportUnhandledError';
+import * as crypto from 'crypto'
+import { use } from 'passport';
 
 @Injectable()
 export class AuthService {
@@ -119,11 +113,7 @@ export class AuthService {
     }
 
     async refreshToken(userID: string, refreshToken: string): Promise<ResponseDto<AuthDto>> {
-
-
-
         const { statusCode, message, data }: ResponseDto<FullUserDto> = await this.userService.getUserByUserID(userID);
-
         if (statusCode != OK_CODE || data === undefined)
             return {
                 statusCode, message
@@ -135,8 +125,8 @@ export class AuthService {
                 message: 'refreshToken khong dung '
             }
 
-        if (data.isActive !== true){
-            return{
+        if (data.isActive !== true) {
+            return {
                 statusCode: BADREQUEST_CODE,
                 message: 'user is banned'
             }
@@ -164,21 +154,60 @@ export class AuthService {
 
     async logout(userID: string): Promise<ResponseDto<AnotherError>> {
 
-        const { statusCode, message, data } = await this.userService.updateUser(userID, { refreshToken: '' })
+        const { statusCode, message, data } = await this.userService.updateUser(userID, { refreshToken: undefined })
 
         return { statusCode: CREATED_RESPONE, message: 'log out successfully' }
     }
 
 
 
-    async ban(userID: string , banValue: boolean ): Promise<ResponseDto<UserDto>> {
-        const { statusCode, message, data }: ResponseDto<UserDto> = await this.userService.updateUser(userID, {  isActive: banValue? false : true })
+    async ban(userID: string, banValue: boolean): Promise<ResponseDto<UserDto>> {
+        const { statusCode, message, data }: ResponseDto<UserDto> = await this.userService.updateUser(userID, { isActive: banValue ? false : true })
         if (statusCode === OK_CODE)
             return {
                 statusCode, message, data: plainToInstance(UserDto, data, { excludeExtraneousValues: true })
             }
         return {
             statusCode, message, data
+        }
+    }
+
+
+
+    async handleGoogleLogin(googleUser: any): Promise<ResponseDto<AuthDto>> {
+        let user: ResponseDto<UserDto> = await this.userService.getUserByEmail(googleUser.email)
+
+
+        const password: string = crypto.randomBytes(12).toString('base64');
+        if (user.statusCode !== OK_CODE) {
+
+            user = await this.register({
+                username:googleUser.email,
+                email: googleUser.email, 
+                password
+            })            
+        }
+
+        if (user.data === undefined)
+            return {
+                statusCode: UNAUTHORIZED_CODE,
+                message: 'Another error'
+            }
+
+       
+        const accessToken = await  this.genAccessToken(user.data.username , user.data.userID,user.data.email , user.data.roleId ,user.data.departmentID);
+        const refreshToken = await this.genRefreshToken(user.data.userID ,user.data.username,
+            user.data.email
+        )
+        const newUser = await this.userService.updateUser(user.data.userID , {refreshToken});
+        return{
+            statusCode: CREATED_RESPONE,
+            message: 'Login successfull',
+            data:{
+                accessToken,
+                refreshToken ,
+                user: newUser.data
+            }
         }
     }
 }
