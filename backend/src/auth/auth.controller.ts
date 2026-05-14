@@ -1,4 +1,4 @@
-import { BadRequestException, Headers, Body, ConflictException, Controller, NotAcceptableException, NotFoundException, Post, UnauthorizedException, UseGuards, Param, ParseUUIDPipe } from '@nestjs/common';
+import { BadRequestException, Headers, Body, ConflictException, Controller, NotAcceptableException, NotFoundException, Post, UnauthorizedException, UseGuards, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBadGatewayResponse, ApiBearerAuth, ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiProperty, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import RegiesterDto from './dto/register.dto';
@@ -15,6 +15,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserAccessGaurd } from './guards/access.guard';
 import { RequirePermission } from 'src/common/require-permissions.decorator';
 import { plainToInstance } from 'class-transformer';
+import { measureMemory } from 'vm';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -55,6 +56,8 @@ export class AuthController {
     if (statusCode === CONFLIG_CODE)
       throw new ConflictException(statusCode , message);
 
+    if (statusCode === UNAUTHORIZED_CODE)
+      throw new UnauthorizedException(statusCode , message)
     if(statusCode === CREATED_RESPONE)
       return {
         statusCode ,
@@ -133,5 +136,45 @@ export class AuthController {
         data
     }
     throw new BadRequestException(ANOTHER_ERROR_RESPONE);   
+ }
+
+ @Patch('ban/:userID')
+ @ApiOperation({summary:'for admin'})
+ @UseGuards(JwtAuthGuard ,UserAccessGaurd)
+ @RequirePermission('admin')
+ @ApiBearerAuth()
+ async ban(@Param('userID', new ParseUUIDPipe()) userID : string){
+    const {statusCode , message , data} : ResponseDto<UserDto>= await this.authService.ban(userID, true );
+    if (statusCode === CONFLIG_CODE)
+      throw new ConflictException(statusCode ,message)
+    if (statusCode === NOTFOUND_CODE)
+      throw new NotFoundException(statusCode ,message)
+
+    if (statusCode === OK_CODE)
+      return{
+    statusCode ,message ,data}
+
+    throw new BadRequestException(statusCode ,message)
+ }
+
+
+
+ @Patch('unban/:userID')
+ @ApiOperation({summary:'for admin'})
+ @UseGuards(JwtAuthGuard ,UserAccessGaurd)
+ @RequirePermission('admin')
+ @ApiBearerAuth()
+ async unBan(@Param('userID', new ParseUUIDPipe()) userID : string){
+    const {statusCode , message , data} : ResponseDto<UserDto>= await this.authService.ban(userID, false );
+    if (statusCode === CONFLIG_CODE)
+      throw new ConflictException(statusCode ,message)
+    if (statusCode === NOTFOUND_CODE)
+      throw new NotFoundException(statusCode ,message)
+
+    if (statusCode === OK_CODE)
+      return{
+    statusCode ,message ,data}
+
+    throw new BadRequestException(statusCode ,message)
  }
 }

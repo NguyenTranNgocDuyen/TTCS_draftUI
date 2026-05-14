@@ -40,4 +40,8 @@ export default class UserDto {
     @IsOptional()
     roleId: string | null
 
+    @Expose()
+    @IsBoolean()
+    @IsOptional()
+    isActive? : boolean | null
 };

@@ -16,17 +16,20 @@ import AuthDto from './dto/auth.dto';
 import FullUserDto from 'src/user/dto/full-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { ENV } from 'src/common/env';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { reportUnhandledError } from 'rxjs/internal/util/reportUnhandledError';
 
 @Injectable()
 export class AuthService {
-   
+
     constructor(private userService: UserService,
         private bcryptHashedservice: BycyptHashedService) {
     }
     async register(registerDto: RegiesterDto): Promise<ResponseDto<UserDto>> {
-        const { email, username, password ,departmentName }: RegiesterDto = registerDto
+        const { email, username, password, departmentName }: RegiesterDto = registerDto
 
-        const { statusCode, message, data }: ResponseDto<UserDto> | AnotherError = await this.userService.createUser({ email, username, password ,departmentName});
+        const { statusCode, message, data }: ResponseDto<UserDto> | AnotherError = await this.userService.createUser({ email, username, password, departmentName });
         if (statusCode !== CREATED_RESPONE)
             return {
                 statusCode, message
@@ -35,7 +38,7 @@ export class AuthService {
         return {
             statusCode,
             message,
-            data : plainToInstance(UserDto, data , {excludeExtraneousValues : true})
+            data: plainToInstance(UserDto, data, { excludeExtraneousValues: true })
         }
     }
 
@@ -44,13 +47,18 @@ export class AuthService {
         const { username, password }: LoginDto = loginDto
 
         const { statusCode, message, data }: ResponseDto<FullUserDto> = await this.userService.getUserByUserName(username);
-        if (statusCode !== OK_CODE)
+        if (statusCode !== OK_CODE || data === undefined)
             return {
                 statusCode,
                 message
             }
 
-        console.log("before check data")
+        if (data.isActive !== true)
+            return {
+                statusCode: UNAUTHORIZED_CODE,
+                message: 'This userID was banned'
+            }
+
         if (data !== undefined) {
             const hashed: string = data?.hashedPassword || ''
 
@@ -59,7 +67,7 @@ export class AuthService {
 
 
 
-            const newAcessToken = await this.genAccessToken(loginDto.username, data?.userID , data?.email , data?.roleId  , data?.departmentID) ;
+            const newAcessToken = await this.genAccessToken(loginDto.username, data?.userID, data?.email, data?.roleId, data?.departmentID);
             const newRefreshToken = await this.genRefreshToken(data?.userID || '', loginDto.username, data?.email || '');
             const userGet = await this.userService.updateUser(data?.userID || '', { refreshToken: newRefreshToken })
             if (userGet.statusCode !== OK_CODE)
@@ -72,14 +80,14 @@ export class AuthService {
                 data: {
                     accessToken: newAcessToken,
                     refreshToken: newRefreshToken,
-                    user: plainToInstance(UserDto , user, {excludeExtraneousValues : true})
+                    user: plainToInstance(UserDto, user, { excludeExtraneousValues: true })
                 }
             }
         }
         return { statusCode: BADREQUEST_CODE, message: 'another error' }
     }
 
-    async genAccessToken(username: string|undefined, userID: string|undefined, email: string|undefined , roleId:string |null|undefined ,departmentID: string|null|undefined) {
+    async genAccessToken(username: string | undefined, userID: string | undefined, email: string | undefined, roleId: string | null | undefined, departmentID: string | null | undefined) {
 
         const payload = {
             userID,
@@ -110,9 +118,9 @@ export class AuthService {
         return refreshToken
     }
 
-    async refreshToken(userID: string , refreshToken : string): Promise<ResponseDto<AuthDto>> {
+    async refreshToken(userID: string, refreshToken: string): Promise<ResponseDto<AuthDto>> {
 
-       
+
 
         const { statusCode, message, data }: ResponseDto<FullUserDto> = await this.userService.getUserByUserID(userID);
 
@@ -127,7 +135,14 @@ export class AuthService {
                 message: 'refreshToken khong dung '
             }
 
-        const newAcessToken: string = await this.genAccessToken(data.username, data.userID, data.email,data?.roleId  , data?.departmentID)
+        if (data.isActive !== true){
+            return{
+                statusCode: BADREQUEST_CODE,
+                message: 'user is banned'
+            }
+        }
+
+        const newAcessToken: string = await this.genAccessToken(data.username, data.userID, data.email, data?.roleId, data?.departmentID)
         const newRefreshToken: string = await this.genRefreshToken(data.userID, data.username, data.email)
 
         const updateUser: ResponseDto<UserDto> = await this.userService.updateUser(data.userID, { refreshToken: newRefreshToken })
@@ -142,15 +157,28 @@ export class AuthService {
             data: {
                 refreshToken: newRefreshToken,
                 accessToken: newAcessToken,
-                user: plainToInstance(UserDto , updateUser.data , {excludeExtraneousValues: true})
+                user: plainToInstance(UserDto, updateUser.data, { excludeExtraneousValues: true })
             }
         }
     }
 
     async logout(userID: string): Promise<ResponseDto<AnotherError>> {
-       
-        const {statusCode , message ,data} = await this.userService.updateUser(userID , {refreshToken : ''})
 
-        return{ statusCode : CREATED_RESPONE , message : 'log out successfully'}
+        const { statusCode, message, data } = await this.userService.updateUser(userID, { refreshToken: '' })
+
+        return { statusCode: CREATED_RESPONE, message: 'log out successfully' }
+    }
+
+
+
+    async ban(userID: string , banValue: boolean ): Promise<ResponseDto<UserDto>> {
+        const { statusCode, message, data }: ResponseDto<UserDto> = await this.userService.updateUser(userID, {  isActive: banValue? false : true })
+        if (statusCode === OK_CODE)
+            return {
+                statusCode, message, data: plainToInstance(UserDto, data, { excludeExtraneousValues: true })
+            }
+        return {
+            statusCode, message, data
+        }
     }
 }

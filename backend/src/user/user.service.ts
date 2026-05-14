@@ -386,7 +386,6 @@ export class UserService {
 
 
     async checkAuthIsAdmin(currentUser): Promise<ResponseDto<DefaultResponse>> {
-        console.log(currentUser)
         if (currentUser.roleId === undefined)
             return {
                 statusCode: BADREQUEST_CODE,
