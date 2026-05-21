@@ -13,7 +13,6 @@ export interface User {
   managedEmployeeIds?: string[];
   permissions?: string[];
   isActive: boolean;
-  avatar?: string;
 }
 
 export interface AuthSession {
@@ -32,7 +31,6 @@ export interface AuthSession {
   isActive: boolean;
   provider: string;
   loggedInAt: string;
-  avatar?: string;
 }
 
 export interface Attendance {

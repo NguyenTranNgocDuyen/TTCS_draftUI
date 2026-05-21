@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { calculateLeaveDays } from '../../services/leaveService';
 import { formatDate } from '../../utils/dateUtils';
-import LeaveRequestModal from '../LeaveRequestModal';
 
 const initialForm = {
   typeLeaveID: '',
@@ -13,8 +12,6 @@ const initialForm = {
 function LeaveRequestSection({ summary, requests, leaveTypes = [], onSubmitRequest }) {
   const [form, setForm] = useState(initialForm);
   const [feedback, setFeedback] = useState(null);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalDays = useMemo(
     () => calculateLeaveDays(form.startDate, form.endDate),
@@ -71,8 +68,6 @@ function LeaveRequestSection({ summary, requests, leaveTypes = [], onSubmitReque
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (isSubmitting) return;
-
     const errorMessage = validate();
 
     if (errorMessage) {
@@ -80,7 +75,6 @@ function LeaveRequestSection({ summary, requests, leaveTypes = [], onSubmitReque
       return;
     }
 
-    setIsSubmitting(true);
     try {
       await onSubmitRequest({
         typeLeaveID: form.typeLeaveID,
@@ -100,8 +94,6 @@ function LeaveRequestSection({ summary, requests, leaveTypes = [], onSubmitReque
         type: 'danger',
         message: error?.message || 'Không thể tạo đơn nghỉ phép.',
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -190,8 +182,8 @@ function LeaveRequestSection({ summary, requests, leaveTypes = [], onSubmitReque
               </label>
 
               <div className="dashboard-panel__actions">
-                <button type="submit" className="dashboard-button dashboard-button--primary" disabled={!leaveTypes.length || isSubmitting}>
-                  {isSubmitting ? 'Đang tạo đơn...' : 'Tạo đơn nghỉ phép'}
+                <button type="submit" className="dashboard-button dashboard-button--primary" disabled={!leaveTypes.length}>
+                  Tạo đơn nghỉ phép
                 </button>
               </div>
             </form>
@@ -209,15 +201,10 @@ function LeaveRequestSection({ summary, requests, leaveTypes = [], onSubmitReque
 
             <div className="dashboard-list">
               {requests.length > 0 ? requests.slice(0, 5).map((item) => (
-                <div 
-                  key={item.id} 
-                  className="dashboard-list__item cursor-pointer hover:bg-slate-50 transition-colors"
-                  onClick={() => setSelectedRequest(item)}
-                  style={{ cursor: 'pointer' }}
-                >
+                <div key={item.id} className="dashboard-list__item">
                   <div>
                     <strong>{item.type}</strong>
-                    <span>{formatDate(item.startDate)} - {formatDate(item.endDate)} | {item.totalDays} ngày | {item.isUnpaid ? 'Không lương' : 'Có lương'}</span>
+                    <span>{formatDate(item.startDate)} - {formatDate(item.endDate)} | {item.totalDays} ngày</span>
                     <span>{item.reason}</span>
                   </div>
                   <div className={`dashboard-status-badge ${getLeaveStatusClass(item.status)}`}>
@@ -231,12 +218,6 @@ function LeaveRequestSection({ summary, requests, leaveTypes = [], onSubmitReque
           </section>
         </aside>
       </div>
-
-      <LeaveRequestModal 
-        isOpen={!!selectedRequest}
-        selectedRequest={selectedRequest}
-        onClose={() => setSelectedRequest(null)}
-      />
     </section>
   );
 }

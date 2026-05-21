@@ -12,7 +12,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import NotificationDto from './dto/notification.dto';
-import { RealtimeService } from 'src/realtime/realtime.service';
 
 const SYSTEM_SENDER_ID = 'system';
 
@@ -21,7 +20,6 @@ export class NotificationService {
   constructor(
     private readonly userService: UserService,
     private readonly prismaService: PrismaService,
-    private readonly realtimeService: RealtimeService,
   ) {}
 
   async sendNotification(
@@ -268,25 +266,14 @@ export class NotificationService {
         };
       };
 
-      let result: ResponseDto<NotificationDto>;
       if (tx) {
-        result = await executeLogic(tx);
-      } else {
-        result = await this.prismaService.$transaction(
-          async (tx) => executeLogic(tx),
-          { timeout: 30000 },
-        );
+        return await executeLogic(tx);
       }
 
-      if (result.statusCode === CREATED_RESPONE && result.data) {
-        this.realtimeService.emitToUser(
-          receiverID,
-          'new_notification',
-          result.data,
-        );
-      }
-
-      return result;
+      return await this.prismaService.$transaction(
+        async (tx) => executeLogic(tx),
+        { timeout: 30000 },
+      );
     } catch (error: unknown) {
       console.error('Error in createNotification:', error);
       return ANOTHER_ERROR_RESPONE;

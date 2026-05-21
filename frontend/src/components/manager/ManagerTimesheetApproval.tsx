@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { FiRefreshCw } from 'react-icons/fi';
+import { FiDownload } from 'react-icons/fi';
 import TimesheetApprovalTable from './TimesheetApprovalTable';
 import { ManagerFeedback } from './SharedComponents';
 import { CorrectionRow } from './TableRows';
@@ -18,20 +18,17 @@ interface ManagerTimesheetApprovalProps {
   onApproveCorrection: (id: string) => void;
   onRejectCorrection: (id: string) => void;
   onViewDetail: (id: string) => void;
-  highlightId?: string | null;
-  processingId?: string | null;
   onReload: () => void;
 }
 
 const CorrectionRowItem = React.memo(({ index, data, style }: any) => {
-  const { correctionRows, onApproveCorrection, onRejectCorrection, processingId } = data;
+  const { correctionRows, onApproveCorrection, onRejectCorrection } = data;
   return (
     <CorrectionRow
       style={style}
       request={correctionRows[index]}
       onApprove={onApproveCorrection}
       onReject={onRejectCorrection}
-      processingId={processingId}
     />
   );
 });
@@ -51,8 +48,6 @@ const ManagerTimesheetApproval: React.FC<ManagerTimesheetApprovalProps> = ({
   onApproveCorrection,
   onRejectCorrection,
   onViewDetail,
-  highlightId,
-  processingId,
   onReload,
 }) => {
   const isTimesheetReviewable = (t: any) => ['Submitted', 'Pending'].includes(t.status);
@@ -92,7 +87,7 @@ const ManagerTimesheetApproval: React.FC<ManagerTimesheetApprovalProps> = ({
           disabled={isLoading}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-600 font-bold border border-slate-200 hover:bg-slate-50 transition-all disabled:opacity-50"
         >
-          <FiRefreshCw className={isLoading ? 'animate-spin' : ''} />
+          <FiDownload className={isLoading ? 'animate-bounce' : ''} />
           {isLoading ? 'Đang tải...' : 'Tải lại dữ liệu'}
         </button>
       </div>
@@ -127,7 +122,6 @@ const ManagerTimesheetApproval: React.FC<ManagerTimesheetApprovalProps> = ({
                     correctionRows,
                     onApproveCorrection,
                     onRejectCorrection,
-                    processingId,
                   }}
                 >
                   {CorrectionRowItem}
@@ -150,8 +144,6 @@ const ManagerTimesheetApproval: React.FC<ManagerTimesheetApprovalProps> = ({
           onReject={onReject}
           onViewDetail={onViewDetail}
           isTimesheetReviewable={isTimesheetReviewable}
-          highlightId={highlightId}
-          processingId={processingId}
           isLoading={isLoading}
         />
       </div>

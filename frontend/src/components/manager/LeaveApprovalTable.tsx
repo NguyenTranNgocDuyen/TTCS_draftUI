@@ -11,16 +11,14 @@ interface LeaveApprovalTableProps {
   onViewDetail: (id: string) => void;
   onRequestCheck: (id: string) => void;
   isLoading: boolean;
-  highlightId?: string | null;
-  processingId?: string | null;
 }
 
 const LeaveRowItem = React.memo(({ index, data, style }: any) => {
-  const { rows, getEmployeeById, getDepartmentName, onApprove, onReject, onViewDetail, onRequestCheck, highlightId, processingId } = data;
+  const { rows, getEmployeeById, getDepartmentName, onApprove, onReject, onViewDetail, onRequestCheck } = data;
   const request = rows[index];
   const employee = getEmployeeById(request.employeeId);
   const balance = employee?.leaveBalance ?? 0;
-  const insufficientBalance = !request.isUnpaid && balance < request.totalDays;
+  const insufficientBalance = balance < request.totalDays;
 
   return (
     <LeaveRow
@@ -34,8 +32,6 @@ const LeaveRowItem = React.memo(({ index, data, style }: any) => {
       onRequestCheck={onRequestCheck}
       reviewable={request.status === 'Pending'}
       insufficientBalance={insufficientBalance}
-      highlightId={highlightId}
-      processingId={processingId}
     />
   );
 });
@@ -49,8 +45,6 @@ const LeaveApprovalTable: React.FC<LeaveApprovalTableProps> = ({
   onViewDetail,
   onRequestCheck,
   isLoading,
-  highlightId,
-  processingId,
 }) => {
   const rowHeight = 72;
   const listHeight = Math.min(rows.length * rowHeight, 600);
@@ -65,7 +59,7 @@ const LeaveApprovalTable: React.FC<LeaveApprovalTableProps> = ({
         <div className="min-w-[1200px]">
           {/* Header */}
           <div className="flex bg-slate-50/50 border-y border-slate-100">
-            <div className="px-4 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-wider w-[110px] shrink-0">Mã đơn</div>
+            <div className="px-4 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-wider min-w-[100px]">Mã đơn</div>
             <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-wider min-w-[180px]">Nhân viên</div>
             <div className="flex-1 px-4 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-wider min-w-[120px]">Loại nghỉ</div>
             <div className="px-4 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-wider min-w-[150px]">Thời gian</div>
@@ -91,8 +85,6 @@ const LeaveApprovalTable: React.FC<LeaveApprovalTableProps> = ({
                 onReject,
                 onViewDetail,
                 onRequestCheck,
-                highlightId,
-                processingId,
               }}
             >
               {LeaveRowItem}

@@ -279,7 +279,7 @@ export async function reviewCorrectionRequest(
   status: ReviewCorrectionStatus,
   reason?: string,
 ): Promise<CorrectionRequest> {
-  const backendStatus = String(status).toLowerCase() === 'approved' ? 'APPROVED' : 'REJECTED';
+  const backendStatus = String(status).toLowerCase() === 'approved' ? 'approved' : 'rejected';
 
   try {
     const response = await httpClient.patch<
@@ -288,7 +288,7 @@ export async function reviewCorrectionRequest(
       `/request-correction/review/${encodeURIComponent(correctionID)}`,
       {
         status: backendStatus,
-        reasonReject: backendStatus === 'REJECTED' ? reason?.trim() || '' : undefined,
+        reasonReject: backendStatus === 'rejected' ? reason?.trim() || '' : undefined,
       },
     );
     const data = unwrapBackendData<BackendCorrectionRequest>(response.data);
