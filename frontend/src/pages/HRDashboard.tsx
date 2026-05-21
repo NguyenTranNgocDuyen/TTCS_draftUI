@@ -25,8 +25,6 @@ import {
   normalizeHrSection,
 } from '../config/hrMenu';
 import { API_CONFIG } from '../config/api';
-import ProfileSection from '../components/employee/ProfileSection';
-import { getEmployeeProfile, updateEmployeeProfile, uploadAvatar } from '../services/profileService';
 import {
   currentHrUser as mockCurrentHrUser,
   departments as mockDepartments,
@@ -36,7 +34,7 @@ import {
   timesheets as mockTimesheets,
 } from '../data/mockData';
 import { fetchHrLeaveTypes, fetchHrUsers, fetchDepartments, fetchHrLeaveRequests } from '../services/hrService';
-import { getAuthSession, getDashboardPathByRole, updateAuthSession } from '../utils/storage';
+import { getAuthSession, getDashboardPathByRole } from '../utils/storage';
 import './EmployeeDashboard.css';
 import '../styles/timesheet.css';
 import '../styles/hr.css';
@@ -78,50 +76,6 @@ function HRDashboard() {
   const [leaveTypes, setLeaveTypes] = useState<HrLeaveType[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
-  const [profile, setProfile] = useState<any>(null);
-
-  useEffect(() => {
-    if (!session?.email) return;
-
-    getEmployeeProfile(session.email).then((fetchedProfile) => {
-      setProfile(fetchedProfile);
-      
-      const currentSession = getAuthSession();
-      if (currentSession && fetchedProfile?.avatar && currentSession.avatar !== fetchedProfile.avatar) {
-        const nextSession = { ...currentSession, avatar: String(fetchedProfile.avatar) };
-        updateAuthSession(nextSession);
-        window.dispatchEvent(new Event('avatar_updated'));
-      }
-    });
-  }, [session?.email]);
-
-  const handleSaveProfile = async (updates: any) => {
-    const nextProfile = await updateEmployeeProfile(session.email, updates);
-    if (!nextProfile) throw new Error('Không thể cập nhật thông tin cá nhân.');
-    setProfile(nextProfile);
-    return nextProfile;
-  };
-
-  const handleUploadAvatar = async (file: File) => {
-    const nextProfile = await uploadAvatar(file);
-    if (!nextProfile) throw new Error('Không thể cập nhật ảnh đại diện.');
-    setProfile(nextProfile);
-    
-    const currentSession = getAuthSession();
-    if (currentSession) {
-      const nextSession = { ...currentSession, avatar: String(nextProfile.avatar) };
-      updateAuthSession(nextSession);
-      window.dispatchEvent(new Event('avatar_updated'));
-    }
-    
-    return nextProfile;
-  };
-
-  const profileStats = useMemo(() => [
-    { label: 'Thâm niên', value: profile?.tenure || 'Chưa rõ' },
-    { label: 'Phép năm còn lại', value: `${profile?.leaveBalance || 0} ngày` },
-    { label: 'Trạng thái', value: profile?.accountStatus || 'Đang hoạt động' },
-  ], [profile]);
 
   useEffect(() => {
     if (!session?.token) {
@@ -254,10 +208,6 @@ function HRDashboard() {
     payrollReports: API_CONFIG.ENABLE_MOCK_FALLBACK ? mockPayrollReports : [],
     feedback,
     onFeedback: showFeedback,
-    profile,
-    onSaveProfile: handleSaveProfile,
-    onUploadAvatar: handleUploadAvatar,
-    profileStats,
   };
 
   return (
@@ -283,10 +233,6 @@ interface CommonHrProps {
   payrollReports: any[];
   feedback: { type: string; message: string } | null;
   onFeedback: (type: string, message: string) => void;
-  profile: any;
-  onSaveProfile: (updates: any) => Promise<any>;
-  onUploadAvatar: (file: File) => Promise<any>;
-  profileStats: any[];
 }
 
 function HRContentRouter({
@@ -319,15 +265,6 @@ function HRContentRouter({
           feedback={commonProps.feedback}
           onFeedback={commonProps.onFeedback}
           onLeaveTypesChange={onLeaveTypesChange}
-        />
-      );
-    case 'profile':
-      return (
-        <ProfileSection
-          profile={commonProps.profile}
-          onSaveProfile={commonProps.onSaveProfile}
-          onUploadAvatar={commonProps.onUploadAvatar}
-          personalStats={commonProps.profileStats}
         />
       );
     default:

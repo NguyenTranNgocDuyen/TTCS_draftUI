@@ -11,8 +11,6 @@ interface TimesheetApprovalTableProps {
   onViewDetail: (id: string) => void;
   isTimesheetReviewable: (t: any) => boolean;
   isLoading: boolean;
-  highlightId?: string | null;
-  processingId?: string | null;
 }
 
 const TIMESHEET_GRID_COLUMNS =
@@ -27,8 +25,6 @@ const TimesheetRowItem = React.memo(({ index, data, style }: any) => {
     onReject,
     onViewDetail,
     isTimesheetReviewable,
-    highlightId,
-    processingId,
   } = data;
   const timesheet = rows[index];
   const employee = getEmployeeById(timesheet.employeeId);
@@ -47,8 +43,6 @@ const TimesheetRowItem = React.memo(({ index, data, style }: any) => {
       onReject={onReject}
       onViewDetail={onViewDetail}
       reviewable={isTimesheetReviewable(timesheet)}
-      highlightId={highlightId}
-      processingId={processingId}
     />
   );
 });
@@ -62,8 +56,6 @@ const TimesheetApprovalTable: React.FC<TimesheetApprovalTableProps> = ({
   onViewDetail,
   isTimesheetReviewable,
   isLoading,
-  highlightId,
-  processingId,
 }) => {
   const rowHeight = 72;
   const listHeight = Math.min(rows.length * rowHeight, 500);
@@ -106,8 +98,6 @@ const TimesheetApprovalTable: React.FC<TimesheetApprovalTableProps> = ({
                 onReject,
                 onViewDetail,
                 isTimesheetReviewable,
-                highlightId,
-                processingId,
               }}
             >
               {TimesheetRowItem}

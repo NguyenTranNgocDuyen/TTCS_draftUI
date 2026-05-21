@@ -15,9 +15,8 @@ import {
 } from '../services/notificationService';
 import type { Role } from '../types';
 import { getDashboardPathByRole } from '../utils/storage';
-import { useSocket } from '../contexts/SocketContext';
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 30_000;
 
 interface NotificationDropdownProps {
   userID?: string;
@@ -66,8 +65,6 @@ function NotificationDropdown({ userID = '', role = 'unknown' }: NotificationDro
     [userID],
   );
 
-  const { socket } = useSocket();
-
   useEffect(() => {
     refreshNotifications();
 
@@ -75,20 +72,8 @@ function NotificationDropdown({ userID = '', role = 'unknown' }: NotificationDro
       refreshNotifications(true);
     }, POLL_INTERVAL_MS);
 
-    if (socket) {
-      const handleNewNotification = () => {
-        refreshNotifications(true);
-      };
-      socket.on('new_notification', handleNewNotification);
-      
-      return () => {
-        window.clearInterval(intervalID);
-        socket.off('new_notification', handleNewNotification);
-      };
-    }
-
     return () => window.clearInterval(intervalID);
-  }, [refreshNotifications, socket]);
+  }, [refreshNotifications]);
 
   useEffect(() => {
     if (!isOpen) {

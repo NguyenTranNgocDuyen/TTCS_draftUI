@@ -32,16 +32,4 @@ export class SelfUpdateUserDto {
   @Type(() => Date)
   @IsDate()
   birthday?: Date | null;
-
-  @ApiPropertyOptional({ description: 'New password' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  password?: string;
-
-  @ApiPropertyOptional({ description: 'Old password' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  oldPassword?: string;
 }

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FiRefreshCw } from 'react-icons/fi';
+import { FiDownload } from 'react-icons/fi';
 import { ManagerFeedback } from './SharedComponents';
 import LeaveApprovalTable from './LeaveApprovalTable';
 
@@ -13,8 +13,6 @@ interface ManagerLeaveApprovalProps {
   onReject: (id: string) => void;
   onRequestCheck: (id: string) => void;
   onViewDetail: (id: string) => void;
-  highlightId?: string | null;
-  processingId?: string | null;
   onReload: () => void;
 }
 
@@ -28,8 +26,6 @@ const ManagerLeaveApproval: React.FC<ManagerLeaveApprovalProps> = ({
   onReject,
   onRequestCheck,
   onViewDetail,
-  highlightId,
-  processingId,
   onReload,
 }) => {
   const rows = useMemo(() => {
@@ -63,7 +59,7 @@ const ManagerLeaveApproval: React.FC<ManagerLeaveApprovalProps> = ({
           disabled={isLoading}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-600 font-bold border border-slate-200 hover:bg-slate-50 transition-all disabled:opacity-50"
         >
-          <FiRefreshCw className={isLoading ? 'animate-spin' : ''} />
+          <FiDownload className={isLoading ? 'animate-bounce' : ''} />
           {isLoading ? 'Đang tải...' : 'Tải lại dữ liệu'}
         </button>
       </div>
@@ -76,8 +72,6 @@ const ManagerLeaveApproval: React.FC<ManagerLeaveApprovalProps> = ({
         onReject={onReject}
         onViewDetail={onViewDetail}
         onRequestCheck={onRequestCheck}
-        highlightId={highlightId}
-        processingId={processingId}
         isLoading={isLoading}
       />
     </section>

@@ -1,6 +1,4 @@
-import { useState, useRef } from 'react';
-
-function getStatusLabel(status) {
+﻿function getStatusLabel(status) {
   switch (status) {
     case 'Submitted':
       return 'Đã gửi';
@@ -19,22 +17,6 @@ function SubmitTimesheetPanel({
   submitState,
   onSubmit,
 }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isSubmittingRef = useRef(false);
-
-  const handleAction = async () => {
-    if (isSubmittingRef.current) return;
-    
-    isSubmittingRef.current = true;
-    setIsSubmitting(true);
-    try {
-      await onSubmit();
-    } finally {
-      isSubmittingRef.current = false;
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <section className="dashboard-panel submit-timesheet-panel">
       <div className="dashboard-panel__heading">
@@ -81,10 +63,10 @@ function SubmitTimesheetPanel({
         <button
           type="button"
           className="dashboard-button dashboard-button--primary"
-          onClick={handleAction}
-          disabled={!submitState.allowed || isSubmitting}
+          onClick={onSubmit}
+          disabled={!submitState.allowed}
         >
-          {isSubmitting ? 'Đang gửi...' : summaryStatus === 'Submitted' ? 'Đã gửi xác nhận' : 'Gửi xác nhận'}
+          {summaryStatus === 'Submitted' ? 'Đã gửi xác nhận' : 'Gửi xác nhận'}
         </button>
         {summaryStatus === 'Submitted' ? (
           <small className="dashboard-panel__footnote">
