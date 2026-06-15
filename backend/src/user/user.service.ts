@@ -73,7 +73,11 @@ export class UserService {
   ) {}
 
   async getAllUser(): Promise<ResponseDto<UserDto[]>> {
-    const users: UserDto[] = await this.prismaService.user.findMany({});
+    const users: UserDto[] = await this.prismaService.user.findMany({
+      include: {
+        role: true,
+      },
+    });
     return {
       statusCode: OK_CODE,
       message: 'get all users successfull',
@@ -1142,6 +1146,9 @@ export class UserService {
     const users: UserDto[] = await this.prismaService.user.findMany({
       where: {
         departmentID,
+      },
+      include: {
+        role: true,
       },
     });
 
