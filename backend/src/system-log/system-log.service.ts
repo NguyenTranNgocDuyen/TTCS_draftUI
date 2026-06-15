@@ -58,12 +58,12 @@ export class SystemLogService {
   }
 
   async toggleAnomaly(logID: string) {
-    const log = await this.prisma.systemLog.findUnique({ where: { logID } });
+    const log = await this.prisma.systemLog.findFirst({ where: { logID } });
     if (!log) {
       return { statusCode: 404, message: 'Log không tồn tại' };
     }
 
-    const updatedLog = await this.prisma.systemLog.update({
+    await this.prisma.systemLog.updateMany({
       where: { logID },
       data: { isAnomalous: !log.isAnomalous },
     });
@@ -71,7 +71,7 @@ export class SystemLogService {
     return {
       statusCode: 200,
       message: 'Đã cập nhật trạng thái log',
-      data: updatedLog,
+      data: { ...log, isAnomalous: !log.isAnomalous },
     };
   }
 }

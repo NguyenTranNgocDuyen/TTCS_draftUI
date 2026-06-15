@@ -26,8 +26,14 @@ export default function HRSystemLogs() {
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<{ type: string; message: string } | null>(null);
   const [anomalousLogs, setAnomalousLogs] = useState<Set<string>>(new Set());
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 2);
+    return d.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
 
   const loadLogs = async () => {
     setLoading(true);

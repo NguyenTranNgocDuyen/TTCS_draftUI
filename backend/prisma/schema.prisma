@@ -278,10 +278,10 @@ model Payroll {
 }
 
 model SystemLog {
-  logID     String   @id @default(uuid())
-  action    String // Hành động (vd: CREATE, UPDATE, DELETE, LOGIN)
-  entity    String? // Tên bảng/module bị tác động (vd: User, Timesheet)
-  entityID  String? // ID của đối tượng bị tác động
+  logID           String   @default(uuid())
+  action          String // Hành động (vd: CREATE, UPDATE, DELETE, LOGIN)
+  entity          String? // Tên bảng/module bị tác động (vd: User, Timesheet)
+  entityID        String? // ID của đối tượng bị tác động
   details         String? // Chi tiết log (có thể lưu dưới dạng JSON string)
   statusCode      Int?    // Mã trạng thái HTTP (vd: 200, 400, 401, 500)
   responseMessage String? // Thông báo lỗi hoặc kết quả trả về
@@ -293,5 +293,6 @@ model SystemLog {
   userID String? // Người thực hiện hành động
   user   User?   @relation(fields: [userID], references: [userID], onDelete: SetNull)
 
+  @@id([logID, createdAt])
   @@map("system_logs")
 }
