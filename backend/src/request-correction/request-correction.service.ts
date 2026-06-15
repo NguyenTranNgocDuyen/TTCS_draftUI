@@ -126,7 +126,7 @@ export class RequestCorrectionService {
 
         const nextCheckIn = proposedCheckIn || entry?.checkIn || null;
         const nextCheckOut = proposedCheckOut || entry?.checkOut || null;
-        
+
         if (proposedCheckIn && proposedCheckIn.getHours() < 6) {
           return {
             statusCode: BADREQUEST_CODE,
@@ -358,15 +358,11 @@ export class RequestCorrectionService {
     }
 
     const hasEntries = timesheet.entries.length > 0;
-    const hasMissingTime = timesheet.entries.some(
-      (entry) => !entry.checkIn || !entry.checkOut,
-    );
     const hasPendingCorrection = timesheet.corrections.length > 0;
     const isLocked =
       timesheet.status === MonthlyTimesheetStatus.APPROVED ||
       timesheet.status === MonthlyTimesheetStatus.SUBMITTED;
-    const canSubmit =
-      hasEntries && !hasMissingTime && !hasPendingCorrection && !isLocked;
+    const canSubmit = hasEntries && !hasPendingCorrection && !isLocked;
 
     await db.monthlyTimesheet.update({
       where: { monthlyTimesheetID },
