@@ -313,7 +313,7 @@ describe('business rules', () => {
         {
           $transaction: jest.fn((callback) => callback(tx)),
           ...tx,
-        },
+        } as any,
         {
           getUserByUserID: jest
             .fn()
@@ -414,6 +414,9 @@ describe('business rules', () => {
             year: 2026,
             status: SUBMITTED,
             isSubmitted: true,
+            entries: [
+              { checkIn: new Date(), checkOut: new Date(), status: 'NORMAL' },
+            ],
           }),
           update: jest.fn().mockResolvedValue({
             monthlyTimesheetID: 'monthly-1',
@@ -681,6 +684,7 @@ describe('business rules', () => {
             .mockResolvedValue({ typeLeaveID: 'type-1', hasSalary: 1 }),
         },
         leaveApplication: {
+          findFirst: jest.fn().mockResolvedValue(null),
           create: jest
             .fn()
             .mockResolvedValue({ leaveApplicationID: 'leave-1', duration: 2 }),
@@ -735,6 +739,7 @@ describe('business rules', () => {
           ]),
         },
         leaveApplication: {
+          findFirst: jest.fn().mockResolvedValue(null),
           create: jest.fn().mockResolvedValue({
             leaveApplicationID: 'leave-conflict',
             duration: 1,
@@ -771,6 +776,48 @@ describe('business rules', () => {
           ],
         }),
       );
+    });
+
+    it('rejects overlapping pending or approved leave applications', async () => {
+      const prisma = {
+        user: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ ...user, remainDaysofLeave: 12 }),
+        },
+        typeLeave: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ typeLeaveID: 'type-1', hasSalary: 1 }),
+        },
+        leaveApplication: {
+          findFirst: jest.fn().mockResolvedValue({
+            leaveApplicationID: 'leave-existing',
+            startDate: new Date('2026-05-18T00:00:00'),
+            endDate: new Date('2026-05-18T00:00:00'),
+            status: PENDING,
+          }),
+          create: jest.fn(),
+        },
+      };
+      const service = new LeaveApplicationService(
+        prisma as any,
+        { createNotification: jest.fn() } as any,
+        {
+          sendLeaveNotification: jest.fn().mockResolvedValue(undefined),
+        } as any,
+      );
+
+      const result = await service.createLeaveApplication(user.userID, {
+        typeLeaveID: 'type-1',
+        startDate: '2026-05-18',
+        endDate: '2026-05-18',
+        reason: 'Family',
+      });
+
+      expect(result.statusCode).toBe(BADREQUEST_CODE);
+      expect(result.message).toContain('overlaps');
+      expect(prisma.leaveApplication.create).not.toHaveBeenCalled();
     });
 
     it('rejects invalid or past leave dates', async () => {

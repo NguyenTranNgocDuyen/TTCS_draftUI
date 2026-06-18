@@ -82,6 +82,21 @@ interface TimesheetReportData {
   summary: TimesheetReportSummary;
 }
 
+function getPreviousMonthPeriod(date = new Date()): {
+  month: number;
+  year: number;
+} {
+  let month = date.getMonth();
+  let year = date.getFullYear();
+
+  if (month === 0) {
+    month = 12;
+    year -= 1;
+  }
+
+  return { month, year };
+}
+
 @Injectable()
 export class MonthlyTimeSheetService {
   constructor(
@@ -264,10 +279,18 @@ export class MonthlyTimeSheetService {
       throw new BadRequestException('Invalid month or year');
     }
 
+    const expectedPeriod = getPreviousMonthPeriod();
+    if (month !== expectedPeriod.month || year !== expectedPeriod.year) {
+      throw new BadRequestException(
+        `Managers can only review submitted timesheets for the previous month (${expectedPeriod.month}/${expectedPeriod.year}).`,
+      );
+    }
+
     const timesheets = await this.prismaService.monthlyTimesheet.findMany({
       where: {
         month,
         year,
+        status: MonthlyTimesheetStatus.SUBMITTED,
         employee: {
           department: {
             managerID: currentManagerId,
@@ -808,7 +831,7 @@ export class MonthlyTimeSheetService {
           await this.notificationService.createNotification(
             userGet.data.userID,
             department.data.managerID,
-            `Monthly timesheet ${monthGet.month}/${monthGet.year} from ${userGet.data.username} needs review.`,
+            `Bảng công tháng ${monthGet.month}/${monthGet.year} của ${userGet.data.username} đang chờ duyệt.`,
             NotificationRelatedType.TIMESHEET,
             dCbt,
           );
@@ -888,6 +911,9 @@ export class MonthlyTimeSheetService {
           where: {
             monthlyTimesheetID,
           },
+          include: {
+            entries: true,
+          },
         });
 
         if (
@@ -904,6 +930,28 @@ export class MonthlyTimeSheetService {
           throw new BadRequestException(
             'This monthly timesheet was already approved',
           );
+
+        const expectedPeriod = getPreviousMonthPeriod();
+        if (
+          monthGet.month !== expectedPeriod.month ||
+          monthGet.year !== expectedPeriod.year
+        ) {
+          throw new BadRequestException(
+            `Only previous month timesheets (${expectedPeriod.month}/${expectedPeriod.year}) can be reviewed.`,
+          );
+        }
+
+        if (
+          accept &&
+          monthGet.entries.some(
+            (entry) =>
+              !entry.checkOut || entry.status === TimesheetStatus.MISSING_OUT,
+          )
+        ) {
+          throw new BadRequestException(
+            'Cannot approve a monthly timesheet with missing check-out entries.',
+          );
+        }
 
         const now = new Date();
         const monthlyTimesheetUpdate = await dCbt.monthlyTimesheet.update({
@@ -975,16 +1023,16 @@ export class MonthlyTimeSheetService {
         const canSubmit = accept
           ? false
           : await this.refreshCanSubmit(monthGet.monthlyTimesheetID, dCbt);
-        const reviewStatus = accept ? 'approved' : 'rejected';
         const rejectReason =
           !accept && monthlyTimesheetUpdate.reasonReject
-            ? ` Reason: ${monthlyTimesheetUpdate.reasonReject}`
+            ? ` Lý do: ${monthlyTimesheetUpdate.reasonReject}`
             : '';
+        const reviewStatus = accept ? 'đã được duyệt' : 'đã bị từ chối';
         const notificationGet =
           await this.notificationService.createNotification(
             reviewerID ?? department.data.managerID,
             userGet.data.userID,
-            `Your monthly timesheet ${monthlyTimesheetUpdate.month}/${monthlyTimesheetUpdate.year} was ${reviewStatus}.${rejectReason}`,
+            `Bảng công tháng ${monthlyTimesheetUpdate.month}/${monthlyTimesheetUpdate.year} của bạn ${reviewStatus}.${rejectReason}`,
             NotificationRelatedType.TIMESHEET,
             dCbt,
           );

@@ -178,7 +178,7 @@ export class RequestCorrectionService {
         const notification = await this.notificationService.createNotification(
           userID,
           managerID,
-          `${timesheet.employee.username} requested a timesheet correction for ${timesheet.month}/${timesheet.year}.`,
+          `${timesheet.employee.username} đã gửi yêu cầu chỉnh sửa bảng công tháng ${timesheet.month}/${timesheet.year}.`,
           NotificationRelatedType.TIMESHEET,
           tx,
         );
@@ -335,7 +335,9 @@ export class RequestCorrectionService {
         const notification = await this.notificationService.createNotification(
           reviewerID,
           request.userID,
-          `Your timesheet correction request was ${dto.status}.${dto.status === TimesheetStatus.REJECTED ? ` Reason: ${reasonReject}` : ''}`,
+          dto.status === TimesheetStatus.APPROVED
+            ? 'Yêu cầu chỉnh sửa bảng công của bạn đã được duyệt.'
+            : `Yêu cầu chỉnh sửa bảng công của bạn đã bị từ chối. Lý do: ${reasonReject}`,
           NotificationRelatedType.TIMESHEET,
           tx,
         );

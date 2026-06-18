@@ -40,7 +40,7 @@ export class WarningService {
       const notification = await this.notificationService.createNotification(
         'system',
         userID,
-        `You have received a warning: ${content}`,
+        `Bạn có cảnh báo mới: ${content}`,
         NotificationRelatedType.WARNING,
         tx,
       );

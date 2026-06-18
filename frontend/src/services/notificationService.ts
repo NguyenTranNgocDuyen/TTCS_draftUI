@@ -46,7 +46,7 @@ export interface NotificationItem {
 }
 
 export async function getMyNotifications(userID: string): Promise<NotificationItem[]> {
-  validateId(userID, 'Missing user ID.', 'NOTIFICATION_USER_MISSING');
+  validateId(userID, 'Thiếu mã người dùng.', 'NOTIFICATION_USER_MISSING');
 
   try {
     const response = await httpClient.get<
@@ -58,14 +58,14 @@ export async function getMyNotifications(userID: string): Promise<NotificationIt
   } catch (error) {
     throw normalizeNotificationError(
       error,
-      'Khong the tai danh sach thong bao.',
+      'Không thể tải danh sách thông báo.',
       'NOTIFICATION_LIST_FAILED',
     );
   }
 }
 
 export async function getUnreadCount(userID: string): Promise<number> {
-  validateId(userID, 'Missing user ID.', 'NOTIFICATION_USER_MISSING');
+  validateId(userID, 'Thiếu mã người dùng.', 'NOTIFICATION_USER_MISSING');
 
   try {
     const response = await httpClient.get<
@@ -78,14 +78,14 @@ export async function getUnreadCount(userID: string): Promise<number> {
   } catch (error) {
     throw normalizeNotificationError(
       error,
-      'Khong the tai so thong bao chua doc.',
+      'Không thể tải số thông báo chưa đọc.',
       'NOTIFICATION_COUNT_FAILED',
     );
   }
 }
 
 export async function markAsRead(notificationID: string): Promise<NotificationItem> {
-  validateId(notificationID, 'Missing notification ID.', 'NOTIFICATION_ID_MISSING');
+  validateId(notificationID, 'Thiếu mã thông báo.', 'NOTIFICATION_ID_MISSING');
 
   try {
     const response = await httpClient.patch<
@@ -104,7 +104,7 @@ export async function markAsRead(notificationID: string): Promise<NotificationIt
   } catch (error) {
     throw normalizeNotificationError(
       error,
-      'Khong the danh dau thong bao da doc.',
+      'Không thể đánh dấu thông báo đã đọc.',
       'NOTIFICATION_MARK_READ_FAILED',
     );
   }
@@ -206,7 +206,7 @@ function normalizeNotification(payload: BackendNotification): NotificationItem {
     id,
     senderID: payload.senderID || null,
     receiverID: payload.receiverID || '',
-    content: payload.content || '',
+    content: translateNotificationContent(payload.content || ''),
     createdAt: toIsoString(payload.createdAt),
     isRead: Boolean(payload.isRead),
     relatedType: payload.relatedType || null,
@@ -245,4 +245,105 @@ function toTimestamp(value: string): number {
   const timestamp = new Date(value).getTime();
 
   return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function translateNotificationContent(content: string): string {
+  const normalized = content.trim();
+
+  if (!normalized) {
+    return '';
+  }
+
+  const leaveReview = normalized.match(
+    /^Your leave application from (.+) to (.+) has been (approved|rejected)\.(?: Reason: (.*))?$/i,
+  );
+  if (leaveReview) {
+    const [, startDate, endDate, status, reason] = leaveReview;
+    const statusText = status.toLowerCase() === 'approved' ? 'đã được duyệt' : 'đã bị từ chối';
+    const reasonText = reason ? ` Lý do: ${reason}` : '';
+
+    return `Đơn nghỉ phép từ ${formatDisplayDate(startDate)} đến ${formatDisplayDate(endDate)} ${statusText}.${reasonText}`;
+  }
+
+  const correctionReview = normalized.match(
+    /^Your timesheet correction request was (APPROVED|REJECTED|approved|rejected)\.(?: Reason: (.*))?$/i,
+  );
+  if (correctionReview) {
+    const [, status, reason] = correctionReview;
+    const statusText = status.toLowerCase() === 'approved' ? 'đã được duyệt' : 'đã bị từ chối';
+    const reasonText = reason ? ` Lý do: ${reason}` : '';
+
+    return `Yêu cầu chỉnh sửa bảng công của bạn ${statusText}.${reasonText}`;
+  }
+
+  const correctionCreate = normalized.match(
+    /^(.+) requested a timesheet correction for (\d{1,2})\/(\d{4})\.$/i,
+  );
+  if (correctionCreate) {
+    const [, employeeName, month, year] = correctionCreate;
+
+    return `${employeeName} đã gửi yêu cầu chỉnh sửa bảng công tháng ${month}/${year}.`;
+  }
+
+  const monthlySubmit = normalized.match(
+    /^Monthly timesheet (\d{1,2})\/(\d{4}) from (.+) needs review\.$/i,
+  );
+  if (monthlySubmit) {
+    const [, month, year, employeeName] = monthlySubmit;
+
+    return `Bảng công tháng ${month}/${year} của ${employeeName} đang chờ duyệt.`;
+  }
+
+  const monthlyReview = normalized.match(
+    /^Your monthly timesheet (\d{1,2})\/(\d{4}) was (approved|rejected)\.(?: Reason: (.*))?$/i,
+  );
+  if (monthlyReview) {
+    const [, month, year, status, reason] = monthlyReview;
+    const statusText = status.toLowerCase() === 'approved' ? 'đã được duyệt' : 'đã bị từ chối';
+    const reasonText = reason ? ` Lý do: ${reason}` : '';
+
+    return `Bảng công tháng ${month}/${year} của bạn ${statusText}.${reasonText}`;
+  }
+
+  const leaveCreate = normalized.match(
+    /^New leave application submitted by (.+) from (.+) to (.+) \((\d+) days?\)\.$/i,
+  );
+  if (leaveCreate) {
+    const [, employeeName, startDate, endDate, duration] = leaveCreate;
+
+    return `${employeeName} đã gửi đơn nghỉ phép từ ${formatDisplayDate(startDate)} đến ${formatDisplayDate(endDate)} (${duration} ngày).`;
+  }
+
+  const warning = normalized.match(/^You have received a warning: (.+)$/i);
+  if (warning) {
+    return `Bạn có cảnh báo mới: ${warning[1]}`;
+  }
+
+  return translateKnownTerms(normalized);
+}
+
+function formatDisplayDate(value: string): string {
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(parsed);
+}
+
+function translateKnownTerms(value: string): string {
+  return value
+    .replace(/\bAPPROVED\b/g, 'đã được duyệt')
+    .replace(/\bREJECTED\b/g, 'đã bị từ chối')
+    .replace(/\bapproved\b/g, 'đã được duyệt')
+    .replace(/\brejected\b/g, 'đã bị từ chối')
+    .replace(/\bReason:/g, 'Lý do:')
+    .replace(/\btimesheet correction request\b/gi, 'yêu cầu chỉnh sửa bảng công')
+    .replace(/\bleave application\b/gi, 'đơn nghỉ phép')
+    .replace(/\bmonthly timesheet\b/gi, 'bảng công tháng');
 }

@@ -176,12 +176,43 @@ function formatNullableTime(isoValue: string | null): string | null {
   return formatted === '--' ? null : formatted;
 }
 
-function resolveRecordDate(entry: BackendAttendanceEntry, checkInIso: string | null): string {
-  if (entry.date) {
-    return entry.date;
+function getDateKeyFromIso(value: string | null): string | null {
+  if (!value) {
+    return null;
   }
 
-  return checkInIso?.slice(0, 10) || getTodayDateKey();
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeDateKey(value: string | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = String(value).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+    return getDateKeyFromIso(trimmed);
+  }
+
+  return null;
+}
+
+function resolveRecordDate(entry: BackendAttendanceEntry, checkInIso: string | null): string {
+  return normalizeDateKey(entry.date) || getDateKeyFromIso(checkInIso) || getTodayDateKey();
 }
 
 function resolveRecordOwner(userID: string): string {
@@ -295,9 +326,25 @@ function getTodayRecordFrom(records: Attendance[]): Attendance | null {
   return sortAttendanceRecords(records).find((record) => record.date === todayKey) || null;
 }
 
+function mergeCachedAttendanceRecord(userID: string, record: Attendance): void {
+  const records = getUserAttendanceRecords(userID).filter((item) => item.id !== record.id);
+  cacheUserRecords(userID, [record, ...records]);
+}
+
 async function refreshCurrentMonthAttendance(userID: string): Promise<Attendance[]> {
   const now = new Date();
   return getMonthlyAttendance(userID, now.getMonth() + 1, now.getFullYear());
+}
+
+async function recoverTodayAttendance(userID: string): Promise<Attendance | null> {
+  const records = await refreshCurrentMonthAttendance(userID);
+  const todayRecord = getTodayRecordFrom(records);
+
+  if (todayRecord) {
+    mergeCachedAttendanceRecord(userID, todayRecord);
+  }
+
+  return todayRecord;
 }
 
 export function getCurrentMockIp(): string {
@@ -354,6 +401,15 @@ export async function getMonthlyAttendance(
       (error && typeof error === 'object' && (error as any).status === 404);
 
     if (isNotFoundError) {
+      const monthPrefix = `${year}-${String(month).padStart(2, '0')}-`;
+      const cachedRecords = getUserAttendanceRecords(userID).filter((record) =>
+        record.date.startsWith(monthPrefix),
+      );
+
+      if (cachedRecords.length > 0) {
+        return sortAttendanceRecords(cachedRecords);
+      }
+
       cacheUserRecords(userID, []);
       return [];
     }
@@ -418,23 +474,48 @@ export function getAttendanceHistory(userKey: string, limit = 7): Attendance[] {
 export async function checkIn(userID: string): Promise<Attendance> {
   validateUserID(userID);
 
+  let immediateRecord: Attendance | null = null;
+
   try {
     const deviceInfo = getCurrentDeviceInfo();
-    await httpClient.post<BackendResponse<unknown>>(
+    const response = await httpClient.post<
+      BackendResponse<BackendAttendanceEntry> | BackendAttendanceEntry
+    >(
       `/attendance-module/checkIn/${encodeURIComponent(userID)}`,
       { deviceInfo },
       { headers: getAttendanceRequestHeaders() },
     );
+    const entry = unwrapBackendData<BackendAttendanceEntry>(response.data);
+
+    if (entry) {
+      immediateRecord = normalizeAttendanceEntry(entry, userID);
+      mergeCachedAttendanceRecord(userID, immediateRecord);
+    }
   } catch (error) {
-    throw normalizeAttendanceError(
+    const normalizedError = normalizeAttendanceError(
       error,
       'Không thể Check-in. Vui lòng thử lại.',
       'ATTENDANCE_CHECKIN_FAILED',
     );
+
+    if (normalizedError.code === 'ALREADY_CHECKED_IN') {
+      const todayRecord = await recoverTodayAttendance(userID).catch(() => null);
+      if (todayRecord) return todayRecord;
+    }
+
+    throw normalizedError;
   }
 
-  const records = await refreshCurrentMonthAttendance(userID);
-  const todayRecord = getTodayRecordFrom(records);
+  let records: Attendance[];
+  try {
+    records = await refreshCurrentMonthAttendance(userID);
+  } catch (error) {
+    if (immediateRecord) return immediateRecord;
+    throw error;
+  }
+  const todayRecord =
+    getTodayRecordFrom(records) ||
+    (immediateRecord?.date === getTodayDateKey() ? immediateRecord : null);
 
   if (!todayRecord) {
     throw createAttendanceError(
@@ -449,23 +530,48 @@ export async function checkIn(userID: string): Promise<Attendance> {
 export async function checkOut(userID: string): Promise<Attendance> {
   validateUserID(userID);
 
+  let immediateRecord: Attendance | null = null;
+
   try {
     const deviceInfo = getCurrentDeviceInfo();
-    await httpClient.post<BackendResponse<unknown>>(
+    const response = await httpClient.post<
+      BackendResponse<BackendAttendanceEntry> | BackendAttendanceEntry
+    >(
       `/attendance-module/checkOut/${encodeURIComponent(userID)}`,
       { deviceInfo },
       { headers: getAttendanceRequestHeaders() },
     );
+    const entry = unwrapBackendData<BackendAttendanceEntry>(response.data);
+
+    if (entry) {
+      immediateRecord = normalizeAttendanceEntry(entry, userID);
+      mergeCachedAttendanceRecord(userID, immediateRecord);
+    }
   } catch (error) {
-    throw normalizeAttendanceError(
+    const normalizedError = normalizeAttendanceError(
       error,
       'Không thể Check-out. Vui lòng thử lại.',
       'ATTENDANCE_CHECKOUT_FAILED',
     );
+
+    if (normalizedError.code === 'ALREADY_COMPLETED') {
+      const todayRecord = await recoverTodayAttendance(userID).catch(() => null);
+      if (todayRecord) return todayRecord;
+    }
+
+    throw normalizedError;
   }
 
-  const records = await refreshCurrentMonthAttendance(userID);
-  const todayRecord = getTodayRecordFrom(records);
+  let records: Attendance[];
+  try {
+    records = await refreshCurrentMonthAttendance(userID);
+  } catch (error) {
+    if (immediateRecord) return immediateRecord;
+    throw error;
+  }
+  const todayRecord =
+    getTodayRecordFrom(records) ||
+    (immediateRecord?.date === getTodayDateKey() ? immediateRecord : null);
 
   if (!todayRecord) {
     throw createAttendanceError(

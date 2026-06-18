@@ -172,9 +172,9 @@ export class SeedService implements OnModuleInit {
     this.logger.log('Đang seed dữ liệu demo...');
 
     const passwordHash = await this.bcrypt.hash(DEMO_PASSWORD);
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
+    const previousPeriod = this.getPreviousMonthPeriod(new Date());
+    const month = previousPeriod.month;
+    const year = previousPeriod.year;
     const businessDays = this.getBusinessDays(year, month, 10);
 
     await this.prisma.$transaction(
@@ -226,6 +226,18 @@ export class SeedService implements OnModuleInit {
     ]);
 
     return roleCount === 0 && departmentCount === 0 && userCount === 0;
+  }
+
+  private getPreviousMonthPeriod(date: Date): { month: number; year: number } {
+    let month = date.getMonth();
+    let year = date.getFullYear();
+
+    if (month === 0) {
+      month = 12;
+      year -= 1;
+    }
+
+    return { month, year };
   }
 
   private async seedRoles(tx: Prisma.TransactionClient): Promise<SeedRoleMap> {

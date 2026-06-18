@@ -210,17 +210,26 @@ export class AttendanceModuleService {
           },
         });
 
+        let createdEntry;
         if (needsTimesheetUpdate) {
           const updateTimesheetPromise = dbCtx.monthlyTimesheet.update({
             where: { monthlyTimesheetID: timesheetID },
             data: timesheetUpdateData,
           });
-          await Promise.all([createEntryPromise, updateTimesheetPromise]);
+          const [entry] = await Promise.all([
+            createEntryPromise,
+            updateTimesheetPromise,
+          ]);
+          createdEntry = entry;
         } else {
-          await createEntryPromise;
+          createdEntry = await createEntryPromise;
         }
 
-        return { statusCode: CREATED_RESPONE, message: 'Check-in successful!' };
+        return {
+          statusCode: CREATED_RESPONE,
+          message: 'Check-in successful!',
+          data: createdEntry,
+        };
       };
 
       if (tx) return await executeLogic(tx);
@@ -350,14 +359,19 @@ export class AttendanceModuleService {
           },
         });
 
+        let updatedEntry;
         if (needsTimesheetUpdate) {
           const updateTimesheetPromise = dbCtx.monthlyTimesheet.update({
             where: { monthlyTimesheetID: timesheetID },
             data: timesheetUpdateData,
           });
-          await Promise.all([updateEntryPromise, updateTimesheetPromise]);
+          const [entry] = await Promise.all([
+            updateEntryPromise,
+            updateTimesheetPromise,
+          ]);
+          updatedEntry = entry;
         } else {
-          await updateEntryPromise;
+          updatedEntry = await updateEntryPromise;
         }
 
         // 4. CHẠY NGẦM: Tính toán lại quyền Submit bảng công (không block kết quả trả về)
@@ -370,6 +384,7 @@ export class AttendanceModuleService {
           message: isWarning
             ? 'Check-out successful with IP warning (Manager notified).'
             : 'Check-out successful!',
+          data: updatedEntry,
         };
       };
 
@@ -382,11 +397,13 @@ export class AttendanceModuleService {
 
       // 5. CHẠY NGẦM: Gửi thông báo CẢNH BÁO IP
       if (result.statusCode === OK_CODE && isWarning && managerIdToNotify) {
+        const warningMessage = `Cảnh báo: Nhân viên ${userName} check-out với IP khác (${IPAddress}) so với lúc check-in.`;
+
         this.notificationService
           .createNotification(
             'system',
             managerIdToNotify,
-            `Cảnh báo: Nhân viên ${userName} Check-out với IP khác (${IPAddress}) so với lúc Check-in.`,
+            warningMessage,
             NotificationRelatedType.WARNING,
           )
           .catch((err) =>

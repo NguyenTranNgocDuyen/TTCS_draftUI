@@ -49,7 +49,10 @@ export class LeaveApplicationService {
       }
 
       const currentYear = new Date().getFullYear();
-      if (start.getFullYear() > currentYear || end.getFullYear() > currentYear) {
+      if (
+        start.getFullYear() > currentYear ||
+        end.getFullYear() > currentYear
+      ) {
         return {
           statusCode: BADREQUEST_CODE,
           message: 'Cannot create leave application for the next year',
@@ -81,6 +84,29 @@ export class LeaveApplicationService {
           statusCode: BADREQUEST_CODE,
           message:
             'Không thể tạo đơn xin nghỉ phép với loại nghỉ phép đã bị vô hiệu hóa',
+        };
+      }
+
+      const overlappingApplication =
+        await this.prisma.leaveApplication.findFirst({
+          where: {
+            senderID: userID,
+            status: { in: [LeaveStatus.PENDING, LeaveStatus.APPROVED] },
+            startDate: { lte: end },
+            endDate: { gte: start },
+          },
+          select: {
+            leaveApplicationID: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+          },
+        });
+
+      if (overlappingApplication) {
+        return {
+          statusCode: BADREQUEST_CODE,
+          message: `Leave application overlaps an existing ${overlappingApplication.status.toLowerCase()} request from ${this.formatDateVi(overlappingApplication.startDate)} to ${this.formatDateVi(overlappingApplication.endDate)}`,
         };
       }
 
@@ -120,7 +146,7 @@ export class LeaveApplicationService {
             await this.notificationService.createNotification(
               userID,
               department.managerID,
-              `New leave application submitted by ${user.username} from ${startDate} to ${endDate} (${duration} days).`,
+              `${user.username} đã gửi đơn nghỉ phép từ ${this.formatDateVi(start)} đến ${this.formatDateVi(end)} (${duration} ngày).`,
               NotificationRelatedType.LEAVE,
             );
 
@@ -349,8 +375,8 @@ export class LeaveApplicationService {
         // Send notification to employee
         const notificationMsg =
           newStatus === LeaveStatus.APPROVED
-            ? `Your leave application from ${application.startDate.toDateString()} to ${application.endDate.toDateString()} has been approved.`
-            : `Your leave application from ${application.startDate.toDateString()} to ${application.endDate.toDateString()} has been rejected. Reason: ${reasonReject}`;
+            ? `Đơn nghỉ phép từ ${this.formatDateVi(application.startDate)} đến ${this.formatDateVi(application.endDate)} đã được duyệt.`
+            : `Đơn nghỉ phép từ ${this.formatDateVi(application.startDate)} đến ${this.formatDateVi(application.endDate)} đã bị từ chối. Lý do: ${reasonReject}`;
 
         await this.notificationService.createNotification(
           reviewerID,
@@ -513,5 +539,13 @@ export class LeaveApplicationService {
     const day = String(value.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+  }
+
+  private formatDateVi(value: Date): string {
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(value);
   }
 }

@@ -12,10 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AttendanceModuleService } from './attendance-module.service';
-import ResponseDto, {
-  AnotherError,
-  DefaultResponse,
-} from 'src/common/response.dto';
+import { DefaultResponse } from 'src/common/response.dto';
 import {
   CONFLIG_CODE,
   CREATED_RESPONE,
@@ -60,7 +57,7 @@ export class AttendanceModuleController {
     @Param('userID', new ParseUUIDPipe()) userID: string,
     @Body() checkInDto: CheckInDto,
     @Req() req: Request,
-  ): Promise<ResponseDto<AnotherError>> {
+  ): Promise<DefaultResponse> {
     const forwarded = req.headers['x-forwarded-for'];
 
     let ip: string | undefined = undefined;
@@ -72,13 +69,10 @@ export class AttendanceModuleController {
 
     const deviceInfo = checkInDto.deviceInfo || req.headers['user-agent'];
 
-    const { statusCode, message } = await this.attendanceModuleService.checkIn(
-      userID,
-      ip,
-      deviceInfo,
-    );
+    const { statusCode, message, data } =
+      await this.attendanceModuleService.checkIn(userID, ip, deviceInfo);
     if (statusCode === CREATED_RESPONE || statusCode === OK_CODE)
-      return { statusCode, message };
+      return { statusCode, message, data };
     if (statusCode == NOTFOUND_CODE) throw new NotFoundException(message);
     if (statusCode === CONFLIG_CODE) throw new ConflictException(message);
 
@@ -100,7 +94,7 @@ export class AttendanceModuleController {
     @Param('userID', new ParseUUIDPipe()) userID: string,
     @Body() checkOutDto: CheckOutDto,
     @Req() req: Request,
-  ): Promise<ResponseDto<AnotherError>> {
+  ): Promise<DefaultResponse> {
     const forwarded = req.headers['x-forwarded-for'];
 
     let ip: string | undefined = undefined;
@@ -112,13 +106,10 @@ export class AttendanceModuleController {
 
     const deviceInfo = checkOutDto.deviceInfo || req.headers['user-agent'];
 
-    const { statusCode, message } = await this.attendanceModuleService.checkOut(
-      userID,
-      ip,
-      deviceInfo,
-    );
+    const { statusCode, message, data } =
+      await this.attendanceModuleService.checkOut(userID, ip, deviceInfo);
     if (statusCode === CREATED_RESPONE || statusCode === OK_CODE)
-      return { statusCode, message };
+      return { statusCode, message, data };
     if (statusCode == NOTFOUND_CODE) throw new NotFoundException(message);
     if (statusCode === CONFLIG_CODE) throw new ConflictException(message);
 

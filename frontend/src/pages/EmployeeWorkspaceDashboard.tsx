@@ -120,12 +120,18 @@ function EmployeeWorkspaceDashboard() {
     try {
       const now = new Date();
       const records = await getMonthlyAttendance(userID, now.getMonth() + 1, now.getFullYear());
-      const todayRecord = getTodayAttendance(userKey);
+      const todayKey = getDateKey();
+      const todayRecord =
+        records.find((record) => record.date === todayKey) ||
+        getTodayAttendance(userKey) ||
+        getTodayAttendance(userID);
       const recentHistory = getAttendanceHistory(userKey, 7);
       const missingRecords = records.filter((record) => record.status === 'Missing Out');
 
-      setTodayAttendance(todayRecord);
-      setHistory(recentHistory);
+      setTodayAttendance((current) =>
+        todayRecord || (current?.date === todayKey ? current : null),
+      );
+      setHistory((current) => (recentHistory.length > 0 ? recentHistory : current));
       setMissingCount(missingRecords.length);
       setCurrentIp(getCurrentMockIp());
       setCurrentDevice(getCurrentDeviceInfo());
@@ -293,6 +299,15 @@ function EmployeeWorkspaceDashboard() {
       return { allowed: false, reason: 'Bảng công đã được gửi xác nhận và đang chờ duyệt.' };
     }
 
+    const periodCorrections = timesheetData.corrections.filter(
+      (item) => item.date >= timesheetData.period.startKey && item.date <= timesheetData.period.endKey,
+    );
+    const localSubmitState = canSubmitTimesheet(timesheetData.rows, periodCorrections, timesheetData.summary);
+
+    if (!localSubmitState.allowed) {
+      return localSubmitState;
+    }
+
     // Rely on the backend's assessment for the whole month if available
     if (summary && typeof summary.canSubmit === 'boolean') {
       if (!summary.canSubmit) {
@@ -304,12 +319,7 @@ function EmployeeWorkspaceDashboard() {
       return { allowed: true, reason: 'Dữ liệu tháng này hợp lệ và sẵn sàng gửi xác nhận đến quản lý.' };
     }
 
-    // Fallback if no backend canSubmit is available
-    const periodCorrections = timesheetData.corrections.filter(
-      (item) => item.date >= timesheetData.period.startKey && item.date <= timesheetData.period.endKey,
-    );
-
-    return canSubmitTimesheet(timesheetData.rows, periodCorrections, timesheetData.summary);
+    return localSubmitState;
   }, [timesheetData]);
 
   const displayRows = useMemo(() => {
@@ -446,7 +456,9 @@ function EmployeeWorkspaceDashboard() {
     setAttendanceFeedback(null);
 
     try {
-      await checkIn(userID);
+      const attendanceRecord = await checkIn(userID);
+      setTodayAttendance(attendanceRecord);
+      setHistory(getAttendanceHistory(session?.email || userID, 7));
       await loadAttendanceData({ showLoading: false });
       void loadTimesheet();
       setAttendanceFeedback({ type: 'success', message: 'Check-in thành công.' });
@@ -469,7 +481,9 @@ function EmployeeWorkspaceDashboard() {
     setAttendanceFeedback(null);
 
     try {
-      await checkOut(userID);
+      const attendanceRecord = await checkOut(userID);
+      setTodayAttendance(attendanceRecord);
+      setHistory(getAttendanceHistory(session?.email || userID, 7));
       await loadAttendanceData({ showLoading: false });
       void loadTimesheet();
       setAttendanceFeedback({ type: 'success', message: 'Check-out thành công.' });
@@ -641,7 +655,10 @@ function EmployeeWorkspaceDashboard() {
           const anchorDateObj = typeof anchorDate === 'string' ? new Date(anchorDate) : anchorDate;
           const month = anchorDateObj.getMonth() + 1;
           const year = anchorDateObj.getFullYear();
-          let titleText = periodType === 'week' ? `Bảng công Tuần / ${year}` : `Bảng công Tháng ${month} / ${year}`;
+          const titleText =
+            periodType === 'week'
+              ? `Bảng công Tuần / ${year}`
+              : `Bảng công Tháng ${month} / ${year}`;
           const empName = profile?.fullName || session?.email || '--';
           const deptName = profile?.department || 'Tất cả';
           const empId = profile?.employeeId || session?.userID || 'EMP';

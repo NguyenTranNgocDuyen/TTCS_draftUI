@@ -40,7 +40,15 @@ const ManagerLeaveApproval: React.FC<ManagerLeaveApprovalProps> = ({
       return dateB - dateA;
     };
 
-    return [...leaveRequests]
+    const uniqueRequests = new Map<string, any>();
+
+    leaveRequests.forEach((request) => {
+      if (request?.id && !uniqueRequests.has(request.id)) {
+        uniqueRequests.set(request.id, request);
+      }
+    });
+
+    return [...uniqueRequests.values()]
       .filter((request) => request.status === 'Pending')
       .sort(sortLeavePendingFirst);
   }, [leaveRequests]);

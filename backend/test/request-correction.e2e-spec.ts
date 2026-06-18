@@ -81,6 +81,10 @@ describe('RequestCorrection (e2e)', () => {
     const employeeRole = roles.find((r) => r.nameRole === 'employee');
     const managerRole = roles.find((r) => r.nameRole === 'manager');
 
+    if (!employeeRole || !managerRole) {
+      throw new Error('Failed to create required e2e roles');
+    }
+
     // Create Manager
     const hashedPassword = await bcrypt.hash('password123');
     const manager = await prisma.user.upsert({
@@ -292,7 +296,7 @@ describe('RequestCorrection (e2e)', () => {
       });
       expect(managerNoti).toBeDefined();
       expect(managerNoti?.content).toContain(
-        'requested a timesheet correction',
+        'đã gửi yêu cầu chỉnh sửa bảng công',
       );
 
       // 2. Manager approves the request
@@ -332,7 +336,7 @@ describe('RequestCorrection (e2e)', () => {
         orderBy: { createdAt: 'desc' },
       });
       expect(employeeNoti).toBeDefined();
-      expect(employeeNoti?.content).toContain(TimesheetStatus.APPROVED);
+      expect(employeeNoti?.content).toContain('đã được duyệt');
     });
 
     it('should fail if the monthly timesheet is not in Draft status', async () => {

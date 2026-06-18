@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
     container_name: timesheet-frontend
     ports:
-      - "5173:80" # Maps localhost:5173 to Nginx port 80 inside the container
+      - "8080:80" # Docker UI: http://localhost:8080, keeps 5173 free for Vite dev
     env_file:
       - ./frontend/.env
     environment:

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -20,7 +20,9 @@ export class LeaveCronService {
         UPDATE "users" 
         SET "remainDaysofLeave" = "totalDaysofLeave"
       `;
-      this.logger.log(`Hoàn thành reset ngày phép. Số lượng nhân viên được cập nhật: ${result}`);
+      this.logger.log(
+        `Hoàn thành reset ngày phép. Số lượng nhân viên được cập nhật: ${result}`,
+      );
     } catch (error) {
       this.logger.error('Lỗi khi chạy cron job reset ngày phép:', error);
     }
